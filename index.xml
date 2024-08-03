@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>于Iron</title>
-        <link>http://localhost:1313/</link>
-        <description>Recent content on 于Iron</description>
+        <title>潦草小驴</title>
+        <link>https://zeel210.github.io/</link>
+        <description>Recent content on 潦草小驴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <copyright>于Iron</copyright>
-        <lastBuildDate>Tue, 18 Jun 2024 23:59:41 +0800</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" /><item>
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Tue, 18 Jun 2024 23:59:41 +0800</lastBuildDate><atom:link href="https://zeel210.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
         <title>归档</title>
-        <link>http://localhost:1313/archives/</link>
+        <link>https://zeel210.github.io/archives/</link>
         <pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate>
         
-        <guid>http://localhost:1313/archives/</guid>
+        <guid>https://zeel210.github.io/archives/</guid>
         <description></description>
         </item>
         <item>
         <title>关于</title>
-        <link>http://localhost:1313/%E5%85%B3%E4%BA%8E/</link>
+        <link>https://zeel210.github.io/%E5%85%B3%E4%BA%8E/</link>
         <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
         
-        <guid>http://localhost:1313/%E5%85%B3%E4%BA%8E/</guid>
+        <guid>https://zeel210.github.io/%E5%85%B3%E4%BA%8E/</guid>
         <description>&lt;p&gt;This is a test page for i18n support.&lt;/p&gt;
 </description>
         </item>
         <item>
         <title>链接</title>
-        <link>http://localhost:1313/%E9%93%BE%E6%8E%A5/</link>
+        <link>https://zeel210.github.io/%E9%93%BE%E6%8E%A5/</link>
         <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
         
-        <guid>http://localhost:1313/%E9%93%BE%E6%8E%A5/</guid>
+        <guid>https://zeel210.github.io/%E9%93%BE%E6%8E%A5/</guid>
         <description>&lt;p&gt;To use this feature, add &lt;code&gt;links&lt;/code&gt; section to frontmatter.&lt;/p&gt;
 &lt;p&gt;This page&amp;rsquo;s frontmatter:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
@@ -61,10 +61,10 @@
         </item>
         <item>
         <title>搜索</title>
-        <link>http://localhost:1313/search/</link>
+        <link>https://zeel210.github.io/search/</link>
         <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
         
-        <guid>http://localhost:1313/search/</guid>
+        <guid>https://zeel210.github.io/search/</guid>
         <description></description>
         </item>
         
