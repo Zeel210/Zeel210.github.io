@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>相机标定 on 潦草小驴</title>
+        <link>http://localhost:1313/tags/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/</link>
+        <description>Recent content in 相机标定 on 潦草小驴</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Sat, 15 Jun 2024 21:24:18 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>一次多相机外参标定异常结果问题排查过程</title>
+        <link>http://localhost:1313/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</link>
+        <pubDate>Sat, 15 Jun 2024 21:24:18 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</guid>
+        <description>&lt;h2 id=&#34;现象&#34;&gt;现象
+&lt;/h2&gt;&lt;p&gt;能够表示相机外参计算精确度的相机重投影误差，一直与它们的理想值之间有着很夸张的差距。&lt;/p&gt;
+&lt;p&gt;拥有一套好的外参的相机的重投影误差，一般小于10，并接近0。但现在的误差最大能达到10的五十次方。。。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsy19zLl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;排查方向&#34;&gt;排查方向
+&lt;/h2&gt;&lt;h3 id=&#34;重投影误差本身的有效性&#34;&gt;重投影误差本身的有效性
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;这套代码起初我在23年写的，写好后给到佳朋，集成进991来给首钢园做标定，很少出现误差值异常夸张的情况。mscalib用的正是这套外参计算代码。&lt;/li&gt;
+&lt;li&gt;用三个录制的标定视频作为输入，用mscalib能得到数值几乎与用python标定代码结果一样的准确外参，更排除了这个可能。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;外参计算代码是否被我不经意改过&#34;&gt;外参计算代码是否被我不经意改过
+&lt;/h3&gt;&lt;p&gt;仔细核查流程的每个可能出错的地方后，用三段好的标定视频能够标定出精准的外参，也排除了这个可能。&lt;/p&gt;
+&lt;h3 id=&#34;标定杆的点检测逻辑是否有漏洞或缺陷&#34;&gt;标定杆的点检测逻辑是否有漏洞或缺陷
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;Mscalib能检测到的有效特征点的数量不是影响标定的因素，用视频检测出的稀疏化后的特征点为5000左右时，也能标定出好结果。而MSCalib检测出的12000个点，效果同样不好。&lt;/li&gt;
+&lt;li&gt;检测帧率和检出效率都没问题，因为同样的时间内，检出的特征点数量并不少。我甚至把检测参数的一部分回调为佳朋在991中的检测参数，同样不起作用。用录制好的视频做测试，也没有问题。&lt;/li&gt;
+&lt;li&gt;经过检查，发现标定杆上五个特征点的顺序在保存时排错了，改正这个问题后问题依旧存在。&lt;/li&gt;
+&lt;li&gt;也怀疑是否是点检测保存下来的点坐标值在被读取时发生异常，比如把保留了两位数字的浮点数读取异常。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;检测数据与外参标定需要的个数不一致&#34;&gt;检测数据与外参标定需要的个数不一致
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;曾狠狠怀疑我保存检测数据的文本文件的数据格式是否有问题，但是将它们与好的标定数据做对比后，发现没有问题。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wps2k6Wdm.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;点检测结果是否有效&#34;&gt;点检测结果是否有效？
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;将检测点全部绘制到画布中，发现点的分布在肉眼上没有问题。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpspG4iym.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;利用记录有检测数据的文本文件，把检测点绘制成动画，简单观察它们是否与预期一致，比如是否有基本的同步性，或者是否有卡顿或检测异常的情况。但还没有发现问题。它们的表现与录制视频中检测到的点的表现肉眼看不出区别。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsXWsZoj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;最终问题所在&#34;&gt;最终问题所在
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/20240911-163847.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;OMbdsihC4s&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;在高速写文件的时候，用&lt;code&gt;out&amp;lt;&amp;lt;point_x&amp;lt;&amp;lt;&amp;quot; &amp;quot;&amp;lt;&amp;lt;point_y&amp;lt;&amp;lt;&amp;quot; &amp;quot;;&lt;/code&gt;的方式，会出现这个写异常问题。而每次只写入一个坐标分量，就没有这个问题。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>多相机外参问题思考</title>
+        <link>http://localhost:1313/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/</link>
+        <pubDate>Sat, 05 Aug 2023 23:34:28 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/</guid>
+        <description>&lt;h2 id=&#34;相机外参检查与校正&#34;&gt;相机外参检查与校正
+&lt;/h2&gt;&lt;h3 id=&#34;思路1利用场地中固定标记点&#34;&gt;思路1：利用场地中固定标记点
+&lt;/h3&gt;&lt;p&gt;将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。&lt;/p&gt;
+&lt;p&gt;每次自检时，各相机再拍摄一张照片，对比两张照片中标记点的位置，进行外参检查与校正。&lt;/p&gt;
+&lt;p&gt;标记点放置位置：&lt;/p&gt;
+&lt;p&gt;a. 地面或墙壁幕布上。&lt;/p&gt;
+&lt;p&gt;b. 地面和墙壁幕布边缘交界处。&lt;/p&gt;
+&lt;p&gt;标记点类型：&lt;/p&gt;
+&lt;p&gt;a. 反光贴。淘宝上有红外反光贴，但是没找到只反射红外光不反射可见光的贴。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wps8QYVxn.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;b. led灯。如何设计：电池供电独立开关？布线供电统一开关？是否影响游戏使用体验？&lt;/p&gt;
+&lt;p&gt;标记点个数：&lt;/p&gt;
+&lt;p&gt;a. 两个：数量较小，只能做外参异常检测，做不到校正。&lt;/p&gt;
+&lt;p&gt;b. 每个相机至少看到三个非共线点：可以校正，但精度未知。会让每个场景标记点的布置变得复杂。&lt;/p&gt;
+&lt;h3 id=&#34;思路2利用场景本身的特征点&#34;&gt;思路2：利用场景本身的特征点
+&lt;/h3&gt;&lt;p&gt;将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。&lt;/p&gt;
+&lt;p&gt;每次自检时，各相机再拍摄一张照片。&lt;/p&gt;
+&lt;p&gt;利用角点提取算法提取两张照片中的特征点，做匹配，根据匹配关系进行外参检查与校正。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsChBAtl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsHfS0Ll.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;在实际场景中的可行性和鲁棒性有待探索（公司的项目场景中红外画面纹理太少了，提取不了特征）。&lt;/p&gt;
+&lt;p&gt;网上有可供参考的特征点相机自标定资料。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsdOxVTl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;现可用来测试的场地照片不多。如果有了可供测试的照片样本，可在一周内完成可行性测试。&lt;/p&gt;
+&lt;h3 id=&#34;思路3其他基于场景本身的方法&#34;&gt;思路3：其他基于场景本身的方法
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;光流估计&lt;/strong&gt;：光流是一种用于估计图像中像素在两个时间点之间的运动的技术。它可以用来估计相机的位移。OpenCV提供了用于计算光流的函数。只能检查不能校准。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;直接法&lt;/strong&gt;：直接法通过将两张图像的灰度值差异建模为相机运动的约束来估计相机的运动。它不依赖于特征点匹配，对于低文本纹理的场景也有效。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当相机移动位置较大，场景布置区别较大时，会失效。&lt;/p&gt;
+&lt;p&gt;缺少照片样本来做测试。&lt;/p&gt;
+&lt;h3 id=&#34;思路4相机imu&#34;&gt;思路4：相机+IMU
+&lt;/h3&gt;&lt;p&gt;对这种模式了解不多，但网上能找到相关的成熟的方案资料。可行性验证时间未知。&lt;/p&gt;
+&lt;p&gt;不能保证在相机的偏移十分缓慢时，imu仍能发挥作用。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsuy43bm.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;思路5利用场景中人体骨骼信息&#34;&gt;思路5：利用场景中人体骨骼信息
+&lt;/h3&gt;&lt;p&gt;当认为有个别相机的外参有偏移时，可以在场地中进个人，利用其骨骼信息，校正相机外参。&lt;/p&gt;
+&lt;p&gt;现已完成了一项测试：利用一个人的骨骼信息校正一台外参明显偏移的相机，效果还行，但没有达到很理想的状态。&lt;/p&gt;
+&lt;p&gt;需要测试这样的精度对 骨骼融合的影响，并继续尝试提高精度。&lt;/p&gt;
+&lt;p&gt;缺点：很难检测某一台相机外参的偏移，目前只能进行校正。需要人的参与。&lt;/p&gt;
+&lt;p&gt;可在2周内完成可行性测试。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wps30yTam.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/th&gt;
+&lt;th&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsBT4kFl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsNrS7Vi.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsIf5DOj.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;初始外参标定过程优化&#34;&gt;初始外参标定过程优化
+&lt;/h2&gt;&lt;p&gt;本次在首钢的标定过程中，遇到的所有问题、麻烦，几乎都是由相机分辨率不一致，或更换相机造成的。在这两个操作后，需要手动更换991系统的中参数文件或重启设备，才能正常标定，但这些操作很难通过优化程序来解决。&lt;/p&gt;
+&lt;h2 id=&#34;对外确定世界坐标系位置的方法&#34;&gt;对外确定世界坐标系位置的方法
+&lt;/h2&gt;&lt;p&gt;当场地中不允许粘贴胶带，来标记坐标系位置时，我们在标定后是否可以提供坐标系位置和方向在相机上的重投影坐标，来表示坐标系在场地中的实际位置？&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsdlVh6i.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>相机标定原理概述</title>
+        <link>http://localhost:1313/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/</link>
+        <pubDate>Sat, 05 Aug 2023 23:34:28 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/</guid>
+        <description>&lt;h2 id=&#34;自己的定义&#34;&gt;自己的定义
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;几何相机标定&lt;/strong&gt;（Geometric Camera Calibration），简称&lt;strong&gt;相机标定&lt;/strong&gt;（Camera Calibration），在英文中也称**“Camera Resectioning”，是一个根据给定的照片或视频，计算估计出相机模型的几何参数的过程。**这些几何参数描述了物体从三维世界到成像平面上各坐标点的对应关系。在计算机视觉领域，这些标定得到的参数可以用来校正镜头失真，以世界单位测量物体的大小，或确定相机在场景中的位置等。在我们的项目中，相机标定的结果主要用于三维场景重建。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsoaZ19i.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;相机标定的几个用处&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;相机标定的通俗解释&#34;&gt;相机标定的通俗解释
+&lt;/h2&gt;&lt;p&gt;如前文所言，相机标定是一个确定特定相机几何参数的过程，以便让相机有能力完成一些特定的精确的操作。如果没有标定，相机的几何参数是未知的，或不精确的。我们拍摄了一张照片，却无法用照片来做我们想做的事：我们的计算机不知道如何处理它来去除畸变，不知道如何测量图像中某物体的真正尺寸，等等。我们可以用等式&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsblwy9m.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;来ji近似描述这个过程，这里x是输入，y是输出，a是相机的几何参数。那么，相机标定的思路，就是“利用多组(x,y)对，建立一个方程组，来求取这组未知量a”。&lt;/p&gt;
+&lt;p&gt;相机的光学成像，是一个将三维世界转换成二维图像的过程。因此我们将三维世界物体表面点的坐标作为输入，二维图像作为输出，来估算出一个可描述相机真实状态的“数学模型”。计算机利用这个相机模型，就可以进行特定的精确操作。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsRBtmSj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;相机成像模型&#34;&gt;相机成像模型
+&lt;/h2&gt;&lt;p&gt;众所周知，一般的相机由一组透镜和感光元件组成，利用透镜成像原理在感光元件上捕获图像。但相机的透镜成像模型较为复杂，涉及到透镜的形状、曲率、畸变等复杂光学性质，这给我们利用三维场景与二维照片来求取相机模型参数带来了困难。不过，我们在标定时关注的只是相机的投影几何关系，而可以忽略透镜的复杂光学成像过程，因此，小孔成像模型通常被用来替换透镜成像模型来计算相机的参数。但小孔成像模型是一种理想化的模型，光线通过一个小孔后直线传播，不发生折射和畸变，没有能力描述相机中的透镜畸变问题。因此，为了准确模拟真实的相机（这里不考虑视场角大于195度的鱼眼相机），一般的相机标定模型包括一个小孔成像模型和径向、切向镜头畸变。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsWZn71i.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;小孔成像&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;在小孔成像模型中，光线穿过小孔，在相机的另一侧投射出一个倒立的图像。这样，虚像平面位于相机前面，包含了场景的颠倒图像。那么，为了构建相机成像模型，估算相机几何参数，就需要用数学语言描述小孔成像的过程，这个过程涉及到了四个坐标系。&lt;/p&gt;
+&lt;h2 id=&#34;四个坐标系&#34;&gt;四个坐标系
+&lt;/h2&gt;&lt;p&gt;• 世界坐标系：用户定义的三维世界的坐标系，用来描述目标物在真实世界里的位置以及相机所在的位置。原点和方向可以任意设置。&lt;/p&gt;
+&lt;p&gt;• 相机坐标系：在相机上建立的坐标系，为了从相机的角度描述物体位置而定义，作为沟通世界坐标系和图像/像素坐标系的中间一环。通常以相机的光心为坐标原点，x轴和y轴平行于图像坐标系的x轴和y轴，z轴为相机的光轴。&lt;/p&gt;
+&lt;p&gt;• 图像坐标系：为了描述成像过程中物体从相机坐标系到图像坐标系的投影投射关系而引入 ，方便进一步得到像素坐标系下的坐标。与成像平面重合，以成像平面的中心（光轴与成像平面的交点）为坐标原点，x 轴和 y轴分别平行于成像平面的两条边。&lt;/p&gt;
+&lt;p&gt;• 像素坐标系：用来描述物体成像后的像点在数字图像上（相片）的坐标，以像素个数为单位，是我们真正从相机内读取到的信息所在的坐标系。与成像平面重合，以成像平面的左上角顶点为原点，x 轴和 y 轴分别平行于图像坐标系的x轴和y轴。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpskmmofl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;接下来我们用这个四个坐标系来描述世界中物体表面的一点在相机上成像的过程，记该点的坐标：&lt;/p&gt;
+&lt;p&gt;世界坐标系：(Xw,Yw,Zw)&lt;/p&gt;
+&lt;p&gt;相机坐标系： (Xc,Yc,Zc)&lt;/p&gt;
+&lt;p&gt;图像坐标系：(x,y)&lt;/p&gt;
+&lt;p&gt;像素坐标系：(u,v)&lt;/p&gt;
+&lt;h2 id=&#34;世界坐标系到相机坐标系相机外参&#34;&gt;世界坐标系到相机坐标系（相机外参）
+&lt;/h2&gt;&lt;p&gt;有了世界坐标系，我们首先知道了物体表面一点P的位置(Xw,Yw,Zw)。为了知道这一点相对于相机的空间位置，就需要做从世界坐标系到相机坐标系的刚体变换。引入齐次坐标，求取世界坐标系相对相机坐标系的旋转矩阵R和平移向量T，就可以将点转换到相机坐标系下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsARK9Dk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;矩阵&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsNzOCkm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;我们称为&lt;strong&gt;相机外参。&lt;strong&gt;其中 R 为 3×3 的&lt;/strong&gt;正交&lt;/strong&gt;阵,向量 t 表示 3×1 的三维平移量。&lt;/p&gt;
+&lt;h2 id=&#34;相机坐标系到像素坐标系相机内参&#34;&gt;相机坐标系到像素坐标系（相机内参）
+&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;相机坐标系到图像坐标系&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;对于三维相机坐标系中的一点 Pc,其对应在成像平面上的成像点，是 Pc 与光心 O 的连线与图像平面的交点 p。又有相机焦距 f 。根据三角形相似定理可以推出相机坐标系与图像坐标的关系满足以下关系:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpseSX9ek.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;写成齐次坐标的矩阵形式：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wps0LGq7m.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsXa3Umm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;&lt;strong&gt;图像坐标系到像素坐标系&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;图像坐标系下的坐标，依然是以“米”为单位的连续量。与它不同，像素坐标系以一个像素(pixel)为单位，原点在图像的左上方，u轴向右，v轴向下。假设&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpstECcTi.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;是相机光心（图像坐标系原点）对应的像素坐标，某个像素点p坐标为(u,v)，dx和dy表示图像中每个像素在成像平面中的物理尺寸。则像素坐标系与成像平面坐标系之间有如下转换公式：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsbm9YZi.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpss5pINl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;综合上述公式，就得到了从世界坐标系到像素坐标系的转换公式：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsxPi9bl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;其中fx = f/dx,fy = f/dy。记&lt;/p&gt;
+&lt;p&gt;​                     &lt;img src=&#34;http://localhost:1313/images/ksohtml/wps3dngdl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;那么这里矩阵M表示从世界坐标系到像素坐标系的投影映射，一般称为&lt;strong&gt;相机矩阵&lt;/strong&gt;(Camera Matrix)。K就是&lt;strong&gt;相机内部矩阵&lt;/strong&gt;，K中的参数就是&lt;strong&gt;相机内参&lt;/strong&gt;(Intrinsic Parameters)，RT称作&lt;strong&gt;相机外部矩阵，&lt;strong&gt;它本身也就是&lt;/strong&gt;相机外参&lt;/strong&gt;(Extrinsic Parameters)&lt;strong&gt;。&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;小孔相机参数的物理意义&#34;&gt;小孔相机参数的物理意义
+&lt;/h2&gt;&lt;p&gt;经过上面的推导，我们就可以知道相机内外参的物理意义了。&lt;/p&gt;
+&lt;p&gt;对于内参K，有更一般的形式&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsFpbMkk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;其中fx = f/dx,fy = f/dy，f是物理世界下的相机焦距，dx与dy是图像中每个像素在成像平面中的物理尺寸，那么fx，fy就是相机以像素为单位在两个方向上的焦距。u0和v0代表相机光心（图像坐标系原点）的像素坐标。这里的γ是像素倾斜系数，一般情况为0。当γ不为零时，表示相机感光片上像素的排列方向没有垂直，有：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsla7PGl.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;则&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsHKQ0Oj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;。推导过程略。&lt;/p&gt;
+&lt;p&gt;对于外参RT，则直接代表了相机坐标系与世界坐标系之间关系。旋转矩阵R表示世界坐标系在相机坐标系下的姿态，平移矩阵T代表世界坐标系原点在相机坐标系下的位置。根据旋转矩阵的性质，可知相机在世界坐标系中的位置为&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpslBiLsk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;相机坐标系归一化&#34;&gt;相机坐标系归一化
+&lt;/h2&gt;&lt;p&gt;在将世界坐标点转换到相机坐标系后，再除掉它最后一个维度的数值（Z值，表示该点距离相机成像平面的深度）。这一归一化操作，得到了相机坐标系下的点P在相机归一化平面中的投影：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsA0dyYk.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这个归一化坐标可以看成是相机前方z=1处平面（相机归一化平面）上的一个点。在相机的视角上，归一化后的点的位置与原本的P点位置没有区别。因此我们可以拿归一化坐标(X&amp;rsquo;,Y&amp;rsquo;,1)做与像素坐标系的转换：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsFu0ykj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这个变换背后的物理意义是，在世界坐标系中的点投射在成像平面上时，点的深度信息在投影过程中丢失了，单目视觉中无法得到像素点的深度值，简单来说，就是信息维度的减少。&lt;/p&gt;
+&lt;p&gt;这样，我们就成功将小孔相机成像的几何过程，通过一组线性模型来拟合出来了：只要知道相机的内外参（相机像素焦距、相机中心点像素位置、相机在场景中的位置和姿态），就可以根据一个点在世界中的位置，计算出它在相机的像素位置。&lt;/p&gt;
+&lt;h2 id=&#34;镜头畸变&#34;&gt;镜头畸变
+&lt;/h2&gt;&lt;p&gt;理想的透镜是没有畸变的。但是，因为制造和安装精度等方面的原因，镜头总是存在这畸变。畸变是相机固有特性，同款相机的畸变也会有些许差异。因此，广义上的相机内参，除了包含上述的K矩阵外，还包含相机镜头的&lt;strong&gt;畸变系数&lt;/strong&gt;。镜头畸变分为&lt;strong&gt;径向畸变&lt;/strong&gt;（Radial Distortion）和&lt;strong&gt;切向畸变&lt;/strong&gt;（Tangential Distortion）。径向畸变来源于相机透镜在制造过程中的误差,而切向畸变则来源于整个相机的组装误差。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;径向畸变&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;径向畸变来自透镜形状不规则以及建模的方式，导致镜头不同部分焦距不同。光线在透镜边缘的弯曲程度和在透镜中心的弯曲程度不同，导致了畸变的发生。在到达图像传感器之前，光线从其理想位置径向向内移动，造成枕型畸变，或径向向外移动，造成桶形畸变。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsx3XDKj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;相机光轴中心的畸变为0，沿着镜头半径方向向边缘移动，畸变越来越严重。畸变的数学模型可以用主点（principle point）周围的泰勒级数展开式的前几项进行描述，通常使用前两项，即k1和k2，对于畸变很大的镜头，如鱼眼镜头，可以增加使用第三项k3来进行描述，图像上某点根据其在径向方向上的分布位置，消除径向畸变的调节公式为：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsgkKJEl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;其中(x,y)表示归一化后的相机坐标系中的一点，k1、k2和k3即为透镜的径向畸变系数。等式左边是去畸变后的坐标。&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;&lt;strong&gt;切向畸变&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;切向畸变来自于整个摄像机的组装过程。由于透镜制造上的缺陷使得透镜本身与图像平面不平行而产生的，如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpse01Akj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;切向畸变可以用两个参数p1和p2来描述：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsXMbXxl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;与径向畸变情况相同，这里(x,y)表示归一化后的相机坐标系中的一点，p1、p2为透镜的切向畸变系数。等式左边是去畸变后的坐标。&lt;/p&gt;
+&lt;p&gt;径向畸变与切向畸变共同作用在位于归一化的相机坐标系上的点，就有：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsA7dlzj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;等式左边是去畸变后的x坐标，y坐标道理相同。因此，对于相机镜头的畸变模型，通常使用5个畸变系数&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsLEevGk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;来进行描述。&lt;/p&gt;
+&lt;p&gt;根据这两种畸变模型，我们也应该注意到，对于一个相机，它的图像的某一点上的畸变系数，是不随点的位置变化而变化的。只利用相机图像的一部分区域得到的畸变系数，在图像的所有位置上都适用。&lt;/p&gt;
+&lt;h2 id=&#34;非线性成像模型&#34;&gt;非线性成像模型
+&lt;/h2&gt;&lt;p&gt;小孔成像模型是线性的，只要相机拍摄多张照片，找到真实世界中的多个点的位置与他们在图像中对应的像素点的位置，理论上就可以求出精度很高的相机参数。但也仅仅是理论上，因为真实的成像过程，但在小孔成像模型外引入的畸变模型是非线性的，在只知道世界坐标点和它们在图像中畸变后的位置，是无法通过解析法直接求取参数的。这就是为什么前文提到，我们无法准确求取相机参数，只能想办法“估算”一个数学模型，来“逼近”相机真实的成像过程。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpssItY2m.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;相机标定流程&#34;&gt;相机标定流程
+&lt;/h2&gt;&lt;p&gt;到目前为止，单目相机的数学模型已经建立起来了。&lt;/p&gt;
+&lt;p&gt;对于一个已经组装好的相机镜头，它的内参和畸变系数是确定的，不变的。但它的外参，会随着相机与实际场景中参照物的相对位置的变化而变化。因此，为了满足MetaSense项目或其他项目，对我们自研的双目相机的单个镜头的内外参与畸变系数的使用要求，我们需要在两个不同的时间和地点完成相机的标定，得到相机单个镜头的内外参和畸变系数，以及双目镜头之间的其他参数（详见双目相机标定，有待完善）。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在相机组装完成，具备了镜头视频流推送的功能后，对相机进行内参标定，获取每个镜头的内参、畸变系数，与双目镜头之间的其他参数。这些数据会被保存。&lt;/li&gt;
+&lt;li&gt;当相机被固定在特定的使用场景中之后，在确保相机位置不会轻易改变后，利用相机在出厂前标定的内参，进行外参标定，也就是获得每个相机在场景中的位置。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;问题与解答&#34;&gt;问题与解答
+&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;相机分辨率改变时，参数如何变化？&lt;/li&gt;
+&lt;li&gt;当多相机的外参整体出现偏倚时，如何补救？&lt;/li&gt;
+&lt;li&gt;有哪些用途的相机需要进行标定？&lt;/li&gt;
+&lt;li&gt;拍摄标定照片时，照片的拍摄方式如何确定？&lt;/li&gt;
+&lt;li&gt;在跨场景外参标定时，如何保证参数的传递？&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;参考资料&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;• Z. Zhang, &lt;a class=&#34;link&#34; href=&#34;http://research.microsoft.com/en-us/um/people/zhang/Papers/TR98-71.pdf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&amp;ldquo;A flexible new technique for camera calibration&amp;rsquo;&amp;rdquo;&lt;/a&gt;, IEEE Transactions on Pattern Analysis and Machine Intelligence, Vol.22, No.11, pages 1330–1334, 2000&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://en.wikipedia.org/wiki/Camera_resectioning&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://en.wikipedia.org/wiki/Camera_resectioning&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://ww2.mathworks.cn/help/vision/ug/camera-calibration.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://ww2.mathworks.cn/help/vision/ug/camera-calibration.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://www.analyticsvidhya.com/blog/2021/10/a-comprehensive-guide-for-camera-calibration-in-computer-vision/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.analyticsvidhya.com/blog/2021/10/a-comprehensive-guide-for-camera-calibration-in-computer-vision/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/583883569&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://zhuanlan.zhihu.com/p/583883569&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/52322904&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://zhuanlan.zhihu.com/p/52322904&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;a class=&#34;link&#34; href=&#34;https://www.cnblogs.com/yutian-blogs/p/13543481.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.cnblogs.com/yutian-blogs/p/13543481.html&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>双目相机标定</title>
+        <link>http://localhost:1313/p/%E5%8F%8C%E7%9B%AE%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/</link>
+        <pubDate>Mon, 22 May 2023 19:23:28 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/%E5%8F%8C%E7%9B%AE%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/</guid>
+        <description>&lt;h2 id=&#34;引文&#34;&gt;引文
+&lt;/h2&gt;&lt;p&gt;双目相机标定，从广义上讲，其实它包含两个部分内容：&lt;/p&gt;
+&lt;p&gt;•  两台相机各自误差的标定（单目标定）&lt;/p&gt;
+&lt;p&gt;•  两台相机之间相互位置的标定（狭义，双目标定）&lt;/p&gt;
+&lt;p&gt;本文的双目标定是狭义的，单指两台相机之间相互位置的标定。而在实际代码实践时，我们所说的双目相机标定是包括内外参标定、畸变矫正与相机矫正等一套完整的过程。&lt;/p&gt;
+&lt;h2 id=&#34;双目相机标定目的&#34;&gt;双目相机标定目的
+&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;获取两台相机之间的相对位置关系，从而进行后续的算法计算。&lt;/li&gt;
+&lt;li&gt;得到相对位置关系后，对双目相机进行校正。校正的目的是让左右相机的同名点（被摄点在左右图像的点对），在两个相机中的y轴坐标一致。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;双目极线校正&#34;&gt;双目极线校正
+&lt;/h2&gt;&lt;p&gt;双目模型：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpse8pwqj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;其中：&lt;/p&gt;
+&lt;p&gt;基线：两个光心的连线称为基线；&lt;/p&gt;
+&lt;p&gt;极平面：物点（空间点P）与两个光心的连线构成的平面称为极平面；&lt;/p&gt;
+&lt;p&gt;极线：极平面与成像平面的交线&lt;/p&gt;
+&lt;p&gt;极点：极线的一端，基线与像平面的 交点&lt;/p&gt;
+&lt;p&gt;像点：极线的一端，光心与物点连线与像平面的交点。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wps7flP5k.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsjvyNbj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如上图所示，一般情况下，由于双目镜头的组装很难达到理想状态，因此相机的光心不是相互平行的。两个相机获取的同一物点的相机坐标在y方向上不一致。当需要对一个相机画面中某物点与另一台相机画面进行匹配时，就需要x和y两个方向上遍历画面。如果我们能够让两个画面中物点的y坐标相同，即可大大提高遍历效率，提高运算性能，方便后续图像处理的很多操作。&lt;/p&gt;
+&lt;p&gt;因此，我们在求取两相机间的位姿关系，以便后续的三维重建的同时，也需要利用两相机位姿数据，对双目相机进行&lt;strong&gt;极线校正&lt;/strong&gt;（不同于单目标定中的畸变矫正）。矫正后的相机极点在无穷远处，两相机的光轴平行，像点在左右图像上的高度一致。标定+校正后图片如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wps7zXxRl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;双目标定理论&#34;&gt;双目标定理论
+&lt;/h2&gt;&lt;p&gt;记：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsV8enYj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;根据双目相机之间平移与旋转矩阵的定义，显然有：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wps5taSmj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;经过推导，得到R和T的计算公式（省略推导过程）：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpsB0rvll.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;其中等式左侧的参数由单目内参标定计算得到。&lt;/p&gt;
+&lt;p&gt;极线校正的计算方法较为复杂， 这里省略，不影响使用opencv进行实际校正操作。&lt;/p&gt;
+&lt;h2 id=&#34;相机内参标定抓图规范&#34;&gt;相机内参标定抓图规范：
+&lt;/h2&gt;&lt;h3 id=&#34;202285标定抓图方式&#34;&gt;2022.8.5标定抓图方式：
+&lt;/h3&gt;&lt;p&gt;&lt;strong&gt;基本原则：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;a. 相机：位置不变，镜头朝向可变。&lt;/p&gt;
+&lt;p&gt;b. 标定板：左右位置不变，前后位置可变。能以竖直方向为轴做旋转，以改变其与相机成像平面的夹角。&lt;/p&gt;
+&lt;p&gt;c. 标定板边缘不得处在镜头画面之外。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;抓图步骤：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;使标定板尽量铺满镜头画面。标定板正对镜头，相机抓取一张照片，左右侧对镜头，各抓取一张照片。&lt;/li&gt;
+&lt;li&gt;增大标定板与相机的距离，使标定板占据相机约四分之一的画面（四个标定板能铺满画面）。随后调整相机角度，使标定板分别铺满相机画面的九宫格，当标定板处在画面的每一个位置上时，调整标定板与相机的角度，再抓取一张照片：&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;a. 在水平位置上，标定板处于画面中间位置时，标定板正对相机。&lt;/p&gt;
+&lt;p&gt;b. 水平位置上，标定板处于画面&lt;strong&gt;左侧&lt;/strong&gt;时，标定板&lt;strong&gt;逆时针&lt;/strong&gt;转动一定角度，侧对相机。&lt;/p&gt;
+&lt;p&gt;c. 水平位置上，标定板处于画面&lt;strong&gt;右侧&lt;/strong&gt;时，标定板&lt;strong&gt;顺时针&lt;/strong&gt;转动一定角度，侧对相机。&lt;/p&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;继续增大标定板与相机的距离，使标定板占据相机约九分之一的画面（九个标定板能铺满画面）。随后分别在画面12宫格（4×3）的各个位置中以（2.）的方式抓取多张照片。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;总计抓取3+9+12=24张标定照片。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpspjmVcm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;双目相机标定步骤&#34;&gt;双目相机标定步骤
+&lt;/h2&gt;&lt;p&gt;基于已拍摄的标定照片和opencv，一个完整的双目相机标定步骤如下。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;利用单目相机标定方法，分别计算两个相机各自的内参和畸变系数，详见“单目相机标定”。&lt;/li&gt;
+&lt;li&gt;利用计算结果，使用initUndistortRectifyMap函数对双目相机同一时刻拍摄的标定照片进行处理，对左右照片进行畸变消除与双目校正，最后裁剪。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/ksohtml/wpswAh82m.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>单目相机内参标定</title>
+        <link>http://localhost:1313/p/%E5%8D%95%E7%9B%AE%E7%9B%B8%E6%9C%BA%E5%86%85%E5%8F%82%E6%A0%87%E5%AE%9A/</link>
+        <pubDate>Tue, 23 Aug 2022 18:56:28 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/%E5%8D%95%E7%9B%AE%E7%9B%B8%E6%9C%BA%E5%86%85%E5%8F%82%E6%A0%87%E5%AE%9A/</guid>
+        <description>&lt;p&gt;详细的内参矩阵、外参矩阵和畸变系数的求解方法和数学推导，见：&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/94244568&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;相机标定之张正友标定法数学原理详解&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;到此我们大致了解了相机标定的理论支撑。在实际应用中，我们基于opencv封装的标定方法，编写相机标定程序。我们对单目相机的标定步骤如下：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;打开相机，拍摄多张处在不同位置、不同角度的标定板照片（标定板拍摄规范见下文）。最少需要3张，以10~20张为宜。标定板需要是黑白相间的矩形构成的棋盘图,照片质量越高越好。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;file:////tmp/wps-zehaoyu/ksohtml/wpsLSttzE.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;运行标定程序，依次完成以下步骤。
+&lt;ol&gt;
+&lt;li&gt;提取内角点：遍历某文件夹下的所有照片，使用findChessboardCorners函数提取每张照片中标定板的内角点。&lt;/li&gt;
+&lt;li&gt;提取亚像素信息：为了提高标定精度，需要在初步提取的角点信息上使用cornerSubPix函数进一步提取亚像素信息，降低相机标定偏差。&lt;/li&gt;
+&lt;li&gt;绘制内角点：在棋盘标定图上绘制找到的内角点，按顺序显示并保存。&lt;/li&gt;
+&lt;li&gt;相机标定：使用calibrateCamera函数进行标定，计算相机内参矩阵、外参矩阵和畸变矩阵。&lt;/li&gt;
+&lt;li&gt;评价标定结果：对标定结果进行评价的方法是通过得到的摄像机内外参数，对空间的三维点进行重新投影计算，得到空间三维点在图像上新的投影点的坐标，计算投影坐标和亚像素角点坐标之间的偏差，偏差越小，标定结果越好。&lt;/li&gt;
+&lt;li&gt;畸变矫正：利用求得的相机的参数数据，使用initUndistortRectifyMap和remap两个函数对图像进行畸变的矫正。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

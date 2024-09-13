@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="现象\r能够表示相机外参计算精确度的相机重投影误差，一直与它们的理想值之间有着很夸张的差距。 拥有一套好的外参的相机的重投影误差，一般小于10，并接近0。但现在的误差最大能达到10的五十次方。。。 排查方向\r重投影误差本身的有效性\r这套代码起初我在23年写的，写好后给到佳朋，集成进991来给首钢园做标定，很少出现误差值异常夸张的情况。mscalib用的正是这套外参计算代码。 用三个录制的标定视频作为输入，用mscalib能得到数值几乎与用python标定代码结果一样的准确外参，更排除了这个可能。 外参计算代码是否被我不经意改过\r仔细核查流程的每个可能出错的地方后，用三段好的标定视频能够标定出精准的外参，也排除了这个可能。 标定杆的点检测逻辑是否有漏洞或缺陷\rMscalib能检测到的有效特征点的数量不是影响标定的因素，用视频检测出的稀疏化后的特征点为5000左右时，也能标定出好结果。而MSCalib检测出的12000个点，效果同样不好。 检测帧率和检出效率都没问题，因为同样的时间内，检出的特征点数量并不少。我甚至把检测参数的一部分回调为佳朋在991中的检测参数，同样不起作用。用录制好的视频做测试，也没有问题。 经过检查，发现标定杆上五个特征点的顺序在保存时排错了，改正这个问题后问题依旧存在。 也怀疑是否是点检测保存下来的点坐标值在被读取时发生异常，比如把保留了两位数字的浮点数读取异常。 检测数据与外参标定需要的个数不一致\r曾狠狠怀疑我保存检测数据的文本文件的数据格式是否有问题，但是将它们与好的标定数据做对比后，发现没有问题。 点检测结果是否有效？\r将检测点全部绘制到画布中，发现点的分布在肉眼上没有问题。 利用记录有检测数据的文本文件，把检测点绘制成动画，简单观察它们是否与预期一致，比如是否有基本的同步性，或者是否有卡顿或检测异常的情况。但还没有发现问题。它们的表现与录制视频中检测到的点的表现肉眼看不出区别。 最终问题所在\r在高速写文件的时候，用out&lt;&lt;point_x&lt;&lt;&quot; &quot;&lt;&lt;point_y&lt;&lt;&quot; &quot;;的方式，会出现这个写异常问题。而每次只写入一个坐标分量，就没有这个问题。">
+<title>一次多相机外参标定异常结果问题排查过程</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="一次多相机外参标定异常结果问题排查过程">
+<meta property='og:description' content="现象\r能够表示相机外参计算精确度的相机重投影误差，一直与它们的理想值之间有着很夸张的差距。 拥有一套好的外参的相机的重投影误差，一般小于10，并接近0。但现在的误差最大能达到10的五十次方。。。 排查方向\r重投影误差本身的有效性\r这套代码起初我在23年写的，写好后给到佳朋，集成进991来给首钢园做标定，很少出现误差值异常夸张的情况。mscalib用的正是这套外参计算代码。 用三个录制的标定视频作为输入，用mscalib能得到数值几乎与用python标定代码结果一样的准确外参，更排除了这个可能。 外参计算代码是否被我不经意改过\r仔细核查流程的每个可能出错的地方后，用三段好的标定视频能够标定出精准的外参，也排除了这个可能。 标定杆的点检测逻辑是否有漏洞或缺陷\rMscalib能检测到的有效特征点的数量不是影响标定的因素，用视频检测出的稀疏化后的特征点为5000左右时，也能标定出好结果。而MSCalib检测出的12000个点，效果同样不好。 检测帧率和检出效率都没问题，因为同样的时间内，检出的特征点数量并不少。我甚至把检测参数的一部分回调为佳朋在991中的检测参数，同样不起作用。用录制好的视频做测试，也没有问题。 经过检查，发现标定杆上五个特征点的顺序在保存时排错了，改正这个问题后问题依旧存在。 也怀疑是否是点检测保存下来的点坐标值在被读取时发生异常，比如把保留了两位数字的浮点数读取异常。 检测数据与外参标定需要的个数不一致\r曾狠狠怀疑我保存检测数据的文本文件的数据格式是否有问题，但是将它们与好的标定数据做对比后，发现没有问题。 点检测结果是否有效？\r将检测点全部绘制到画布中，发现点的分布在肉眼上没有问题。 利用记录有检测数据的文本文件，把检测点绘制成动画，简单观察它们是否与预期一致，比如是否有基本的同步性，或者是否有卡顿或检测异常的情况。但还没有发现问题。它们的表现与录制视频中检测到的点的表现肉眼看不出区别。 最终问题所在\r在高速写文件的时候，用out&lt;&lt;point_x&lt;&lt;&quot; &quot;&lt;&lt;point_y&lt;&lt;&quot; &quot;;的方式，会出现这个写异常问题。而每次只写入一个坐标分量，就没有这个问题。">
+<meta property='og:url' content='https://zeel210.github.io/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2024-06-15T21:24:18&#43;08:00'/><meta property='article:modified_time' content='2024-06-15T21:24:18&#43;08:00'/>
+<meta name="twitter:title" content="一次多相机外参标定异常结果问题排查过程">
+<meta name="twitter:description" content="现象\r能够表示相机外参计算精确度的相机重投影误差，一直与它们的理想值之间有着很夸张的差距。 拥有一套好的外参的相机的重投影误差，一般小于10，并接近0。但现在的误差最大能达到10的五十次方。。。 排查方向\r重投影误差本身的有效性\r这套代码起初我在23年写的，写好后给到佳朋，集成进991来给首钢园做标定，很少出现误差值异常夸张的情况。mscalib用的正是这套外参计算代码。 用三个录制的标定视频作为输入，用mscalib能得到数值几乎与用python标定代码结果一样的准确外参，更排除了这个可能。 外参计算代码是否被我不经意改过\r仔细核查流程的每个可能出错的地方后，用三段好的标定视频能够标定出精准的外参，也排除了这个可能。 标定杆的点检测逻辑是否有漏洞或缺陷\rMscalib能检测到的有效特征点的数量不是影响标定的因素，用视频检测出的稀疏化后的特征点为5000左右时，也能标定出好结果。而MSCalib检测出的12000个点，效果同样不好。 检测帧率和检出效率都没问题，因为同样的时间内，检出的特征点数量并不少。我甚至把检测参数的一部分回调为佳朋在991中的检测参数，同样不起作用。用录制好的视频做测试，也没有问题。 经过检查，发现标定杆上五个特征点的顺序在保存时排错了，改正这个问题后问题依旧存在。 也怀疑是否是点检测保存下来的点坐标值在被读取时发生异常，比如把保留了两位数字的浮点数读取异常。 检测数据与外参标定需要的个数不一致\r曾狠狠怀疑我保存检测数据的文本文件的数据格式是否有问题，但是将它们与好的标定数据做对比后，发现没有问题。 点检测结果是否有效？\r将检测点全部绘制到画布中，发现点的分布在肉眼上没有问题。 利用记录有检测数据的文本文件，把检测点绘制成动画，简单观察它们是否与预期一致，比如是否有基本的同步性，或者是否有卡顿或检测异常的情况。但还没有发现问题。它们的表现与录制视频中检测到的点的表现肉眼看不出区别。 最终问题所在\r在高速写文件的时候，用out&lt;&lt;point_x&lt;&lt;&quot; &quot;&lt;&lt;point_y&lt;&lt;&quot; &quot;;的方式，会出现这个写异常问题。而每次只写入一个坐标分量，就没有这个问题。">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#现象">现象</a></li>
+    <li><a href="#排查方向">排查方向</a>
+      <ol>
+        <li><a href="#重投影误差本身的有效性">重投影误差本身的有效性</a></li>
+        <li><a href="#外参计算代码是否被我不经意改过">外参计算代码是否被我不经意改过</a></li>
+        <li><a href="#标定杆的点检测逻辑是否有漏洞或缺陷">标定杆的点检测逻辑是否有漏洞或缺陷</a></li>
+        <li><a href="#检测数据与外参标定需要的个数不一致">检测数据与外参标定需要的个数不一致</a></li>
+        <li><a href="#点检测结果是否有效">点检测结果是否有效？</a></li>
+      </ol>
+    </li>
+    <li><a href="#最终问题所在">最终问题所在</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/" >
+                相机标定
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">一次多相机外参标定异常结果问题排查过程</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Jun 15, 2024</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="现象">现象
+</h2><p>能够表示相机外参计算精确度的相机重投影误差，一直与它们的理想值之间有着很夸张的差距。</p>
+<p>拥有一套好的外参的相机的重投影误差，一般小于10，并接近0。但现在的误差最大能达到10的五十次方。。。</p>
+<p><img src="/images/ksohtml/wpsy19zLl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h2 id="排查方向">排查方向
+</h2><h3 id="重投影误差本身的有效性">重投影误差本身的有效性
+</h3><ol>
+<li>这套代码起初我在23年写的，写好后给到佳朋，集成进991来给首钢园做标定，很少出现误差值异常夸张的情况。mscalib用的正是这套外参计算代码。</li>
+<li>用三个录制的标定视频作为输入，用mscalib能得到数值几乎与用python标定代码结果一样的准确外参，更排除了这个可能。</li>
+</ol>
+<h3 id="外参计算代码是否被我不经意改过">外参计算代码是否被我不经意改过
+</h3><p>仔细核查流程的每个可能出错的地方后，用三段好的标定视频能够标定出精准的外参，也排除了这个可能。</p>
+<h3 id="标定杆的点检测逻辑是否有漏洞或缺陷">标定杆的点检测逻辑是否有漏洞或缺陷
+</h3><ol>
+<li>Mscalib能检测到的有效特征点的数量不是影响标定的因素，用视频检测出的稀疏化后的特征点为5000左右时，也能标定出好结果。而MSCalib检测出的12000个点，效果同样不好。</li>
+<li>检测帧率和检出效率都没问题，因为同样的时间内，检出的特征点数量并不少。我甚至把检测参数的一部分回调为佳朋在991中的检测参数，同样不起作用。用录制好的视频做测试，也没有问题。</li>
+<li>经过检查，发现标定杆上五个特征点的顺序在保存时排错了，改正这个问题后问题依旧存在。</li>
+<li>也怀疑是否是点检测保存下来的点坐标值在被读取时发生异常，比如把保留了两位数字的浮点数读取异常。</li>
+</ol>
+<h3 id="检测数据与外参标定需要的个数不一致">检测数据与外参标定需要的个数不一致
+</h3><ol>
+<li>曾狠狠怀疑我保存检测数据的文本文件的数据格式是否有问题，但是将它们与好的标定数据做对比后，发现没有问题。</li>
+</ol>
+<p><img src="/images/ksohtml/wps2k6Wdm.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h3 id="点检测结果是否有效">点检测结果是否有效？
+</h3><ol>
+<li>将检测点全部绘制到画布中，发现点的分布在肉眼上没有问题。</li>
+</ol>
+<p><img src="/images/ksohtml/wpspG4iym.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<ol start="2">
+<li>利用记录有检测数据的文本文件，把检测点绘制成动画，简单观察它们是否与预期一致，比如是否有基本的同步性，或者是否有卡顿或检测异常的情况。但还没有发现问题。它们的表现与录制视频中检测到的点的表现肉眼看不出区别。</li>
+</ol>
+<p><img src="/images/ksohtml/wpsXWsZoj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h2 id="最终问题所在">最终问题所在
+</h2><p><img src="/images/ksohtml/20240911-163847.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="OMbdsihC4s"
+	
+	
+></p>
+<p>在高速写文件的时候，用<code>out&lt;&lt;point_x&lt;&lt;&quot; &quot;&lt;&lt;point_y&lt;&lt;&quot; &quot;;</code>的方式，会出现这个写异常问题。而每次只写入一个坐标分量，就没有这个问题。</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">多相机外参问题思考</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">相机标定原理概述</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%8F%8C%E7%9B%AE%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">双目相机标定</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%8D%95%E7%9B%AE%E7%9B%B8%E6%9C%BA%E5%86%85%E5%8F%82%E6%A0%87%E5%AE%9A/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">单目相机内参标定</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

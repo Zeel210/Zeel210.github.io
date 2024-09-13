@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>笔记备忘 on 潦草小驴</title>
+        <link>http://localhost:1313/tags/%E7%AC%94%E8%AE%B0%E5%A4%87%E5%BF%98/</link>
+        <description>Recent content in 笔记备忘 on 潦草小驴</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Wed, 14 Aug 2024 21:46:21 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/%E7%AC%94%E8%AE%B0%E5%A4%87%E5%BF%98/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>C&#43;&#43;技术Q&amp;A（二）</title>
+        <link>http://localhost:1313/p/c-%E6%8A%80%E6%9C%AFqa%E4%BA%8C/</link>
+        <pubDate>Wed, 14 Aug 2024 21:46:21 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/c-%E6%8A%80%E6%9C%AFqa%E4%BA%8C/</guid>
+        <description>&lt;h2 id=&#34;c技术qa二&#34;&gt;C++技术Q&amp;amp;A（二）
+&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;多线程里面的promise和future，以及和atomic的差别，锁&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;std::move&lt;/p&gt;
+&lt;p&gt;用于实现&lt;strong&gt;移动语义&lt;/strong&gt;。将对象的所有权从一个对象转移到另一个对象，从而避免不必要的复制，提高程序性能。&lt;/p&gt;
+&lt;p&gt;std::move的主要作用是将一个左值强制转换为右值引用，从而使得该对象能够参与移动语义。例如，当你不再需要使用某个对象时，可以用std::move将它转换为右值引用，以便资源被高效地“移动”到新对象中，而不是“复制”。&lt;/p&gt;
+&lt;p&gt;使用std::move后，原对象不再有效。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;左值和右值拷贝&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;左值（lvalue）和右值（rvalue）是表达式的两种&lt;strong&gt;基本类型&lt;/strong&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;左值是一个表达式，表示内存中的一个对象，&lt;strong&gt;可以获取该对象的地址&lt;/strong&gt;。左值通常是变量、对象的成员、或者返回左值引用的函数调用。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;右值：通常是表达式的结果、常量、或者临时对象。&lt;strong&gt;它表示临时值或字面量&lt;/strong&gt;。生命周期短，只能出现在赋值操作的右边。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;右值引用“&amp;amp;&amp;amp;”：允许我们操作即将被销毁的对象，从而实现&lt;strong&gt;移动语义&lt;/strong&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;左值拷贝&lt;/strong&gt;：当你将一个对象赋值给另一个对象时，如果被赋值的对象是左值（持久存在），通常会发生拷贝操作。这意味着所有权不会转移，源对象和目标对象都有独立的内存。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// s1 是左值，发生深拷贝
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;右值引用&lt;/strong&gt;：当你通过右值引用将临时对象赋值给另一个对象时，移动语义可能会被触发，资源将被移动而不是拷贝。这提高了性能，因为避免了不必要的内存分配和复制。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-C++&#34; data-lang=&#34;C++&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s3&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;move&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;s1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// s1 是左值，通过 std::move 转换为右值，触发移动语义
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;构造函数和析构函数里面能不能是虚函数&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;构造函数不能是虚函数。在基类构造函数执行时，派生类的虚函数表还未初始化完毕。因此，无法在构造函数中正确调用派生类的虚函数版本。&lt;/li&gt;
+&lt;li&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;this指针能不能删除&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;this指针：在一个对象上调用成员函数时，该函数会自动接收一个指向该对象的指针，这个指针就是this指针。this指针指向调用该成员函数的对象的内存地址，使得函数能够访问该对象的成员变量和其他成员函数。&lt;strong&gt;确保了函数可以正确地访问和操作属于当前对象的成员变量。&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;this指针不能被直接删除或修改，它是由编译器管理的指向当前对象的指针。&lt;/li&gt;
+&lt;li&gt;虽然可以通过delete this来销毁对象，但这种操作非常危险。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;拷贝构造，unique_ptr为什么不能拷贝构造&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;拷贝构造函数允许你创建一个新的对象，并将现有对象的内容复制到新对象中。&lt;/li&gt;
+&lt;li&gt;std::unique_ptr 不允许多个指针同时拥有相同的资源，从而避免了潜在的双重释放和悬空指针问题。&lt;/li&gt;
+&lt;li&gt;虽然 std::unique_ptr 不支持拷贝构造，但它支持移动构造和移动赋值，能通过 std::move 转移所有权。
+&lt;ol&gt;
+&lt;li&gt;std::unique_ptr&lt;int&gt; ptr2 = std::move(ptr1);&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;什么情况下拷贝构造函数设成private&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;独立资源的管理&lt;/li&gt;
+&lt;li&gt;单例模式&lt;/li&gt;
+&lt;li&gt;禁止复制的对象&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;struct和class的区别&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;struct 中的成员（包括数据成员和成员函数）是 公有（public） 的。class相反，默认都是私有。&lt;/li&gt;
+&lt;li&gt;他们的继承默认方式同上。&lt;/li&gt;
+&lt;li&gt;struct 更倾向于用来定义数据结构。class 更倾向于用来定义对象和行为&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在迭代器的循环中，为什么不能调用erase函数&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;当你从容器中删除一个元素时，指向该元素的迭代器会失效。对于一些容器，删除某个元素后，该元素之后的所有迭代器也可能会失效。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;解决方案：使用 erase 返回的迭代器来更新循环中的迭代器，确保迭代器始终有效。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;8
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;vec&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;it&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;vec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;begin&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;it&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;vec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;it&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;         
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;        &lt;span class=&#34;n&#34;&gt;it&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;vec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;erase&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;it&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 使用erase返回的有效迭代器     
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;else&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;         
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;        &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;it&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 仅在没有删除元素时递增迭代器     
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;讲讲虚函数、虚表、虚指针&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;当一个类中包含虚函数时，编译器会在对象中插入一个&lt;strong&gt;指向虚表的指针&lt;/strong&gt;（即虚表指针 vptr），而虚表则保存了这个类的所有虚函数的地址。&lt;/li&gt;
+&lt;li&gt;虚表中的每个元素对应类的一个虚函数，存储的是该函数的地址。&lt;/li&gt;
+&lt;li&gt;如果类继承了基类并重写了基类的虚函数，派生类的虚表中对应项会指向派生类的重写版本。当类派生出子类时，如果子类重写了基类的虚函数，子类的虚表中的相应指针会被更新为指向子类的函数。&lt;/li&gt;
+&lt;li&gt;虚函数调用过程：
+&lt;ol&gt;
+&lt;li&gt;通过对象的 vptr 找到对应的虚表。&lt;/li&gt;
+&lt;li&gt;根据虚函数在类中声明的顺序，从虚表中找到对应的函数指针。&lt;/li&gt;
+&lt;li&gt;调用虚表中对应的函数指针，执行派生类中的虚函数实现。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;虚表指针是在对象构造时初始化的。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;基类的析构函数为什么要定义成虚函数&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;如果基类的析构函数不是虚函数，当我们通过基类指针删除派生类对象时，只会调用基类的析构函数，而不会调用派生类的析构函数。这可能导致派生类中的资源（如动态分配的内存、文件句柄等）无法被正确释放，造成资源泄漏。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;四种类型转换运算符&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;分别是static_cast、dynamic_cast、const_cast和reinterpret_cast&lt;/li&gt;
+&lt;li&gt;static_cast 是一种用于执行常规类型转换的运算符。&lt;/li&gt;
+&lt;li&gt;dynamic_cast 主要用于在多态情况下进行类型转换。多态类型的指针或引用的转换：用于从基类向派生类的安全转换，确保转换是有效的。如果转换无效，指针类型会返回 nullptr。dynamic_cast 只能用于包含虚函数的类，即具有多态性。如果类中没有虚函数，dynamic_cast 将无法使用。&lt;/li&gt;
+&lt;li&gt;const_cast 用于在类型转换中添加或移除 const 或 volatile 修饰符。它是唯一可以修改常量性的类型转换运算符。&lt;/li&gt;
+&lt;li&gt;reinterpret_cast 用于进行几乎任意的类型转换。这种转换是非常底层的，它不会考虑类型的实际含义。很危险。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;c++内存&lt;/p&gt;
+&lt;p&gt;他们通常被分成几个区域。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;静态/全局内存区（Static/Global Memory Area）
+&lt;ol&gt;
+&lt;li&gt;存放内容：存储全局变量、静态变量（static）、常量（const）以及一些特殊变量。&lt;/li&gt;
+&lt;li&gt;生命周期：这些变量在程序启动时分配，并在程序结束时销毁，生命周期贯穿整个程序运行期。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;栈区（Stack Area）
+&lt;ol&gt;
+&lt;li&gt;存放内容：存储局部变量和函数调用时的参数以及返回地址。每次函数调用都会在栈中创建一个新的栈帧，用于保存该函数的局部变量、参数和返回地址。&lt;/li&gt;
+&lt;li&gt;生命周期：局部变量的生命周期与其所在的函数调用相关，当函数结束时，这些变量被自动销毁。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;堆区（Heap Area）
+&lt;ol&gt;
+&lt;li&gt;存放内容：通过动态内存分配（如 new、malloc）分配的内存块。&lt;/li&gt;
+&lt;li&gt;生命周期：由程序员显式管理，必须显式释放（如 delete、free），否则可能导致内存泄漏。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;智能指针有哪些，分别如何使用&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;std::shared_ptr是一个共享所有权的智能指针，多个std::shared_ptr可以指向同一对象，并且通过引用计数管理资源。当最后一个std::shared_ptr离开作用域时，资源才会被释放。&lt;/p&gt;
+&lt;p&gt;​	使用场景：当需要多个所有者共同管理一个对象的生命周期时。 适用于需要共享对象但无法明确确定对象生命周期的场景，例如观察者模式。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;std::unique_ptr在第20条说过。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;std::weak_ptr：用于观察std::shared_ptr所管理的资源，避免循环引用，不影响引用计数。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;使用智能指针可以显著减少内存管理错误，提高代码的安全性和可维护性。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;STL&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;容器（Containers）&lt;/li&gt;
+&lt;li&gt;迭代器&lt;/li&gt;
+&lt;li&gt;算法
+&lt;ol&gt;
+&lt;li&gt;非变更算法（Non-modifying Algorithms）：不改变容器内容，只读操作。  std::for_each：对范围内的每个元素应用操作。 std::find：在范围内查找指定元素。 std::count：计算指定元素的出现次数。&lt;/li&gt;
+&lt;li&gt;变更算法（Modifying Algorithms）：会修改容器内容。  std::copy：将元素复制到另一个范围。 std::transform：对每个元素应用操作并存储结果。 std::fill：用指定值填充范围。&lt;/li&gt;
+&lt;li&gt;排序算法（Sorting Algorithms）：用于排序和排列元素。  std::sort：对范围内的元素进行升序排序。 std::reverse：反转范围内的元素顺序。 std::shuffle：随机打乱范围内的元素顺序。&lt;/li&gt;
+&lt;li&gt;数值算法（Numeric Algorithms）：用于数值计算。  std::accumulate：计算范围内元素的累积和。 std::inner_product：计算内积。 std::partial_sum：计算部分和。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;函数对象（Function Objects, Functors）&lt;/li&gt;
+&lt;li&gt;适配器（Adapters）&lt;/li&gt;
+&lt;li&gt;。。。。。。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;变量的声明和定义&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;声明（Declaration）告诉编译器变量的名称和类型，但不会为变量分配内存或初始化值。声明通常用于在多个文件之间共享变量的情况。例如，如果你在一个头文件中声明一个变量，那么这个变量就可以在其他源文件中使用。&lt;/li&gt;
+&lt;li&gt;定义（Definition）不仅告诉编译器变量的名称和类型，还为变量分配内存，并且可以初始化它。定义通常只出现一次，因为它负责实际创建变量。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;extern&lt;/strong&gt;关键字通常用于变量的声明，&lt;strong&gt;以表示变量定义在其他文件中&lt;/strong&gt;。例如，在头文件中声明全局变量，在源文件中定义。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;extern 和 extern C有什么区别&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;extern &amp;ldquo;C&amp;rdquo; 是一种 C++ 语言的扩展，用于指示编译器使用 C 语言的函数命名和调用约定。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// C++ 头文件中 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;extern&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;C&amp;#34;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;	&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;myFunction&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 这会使用 C 的命名约定 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// C++ 源文件中 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;extern&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;C&amp;#34;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;myFunction&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;         
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;        &lt;span class=&#34;c1&#34;&gt;// 函数实现     
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;静态成员函数&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;静态成员函数（Static Member Function）是属于类本身的函数，而不是某个具体对象的成员函数。&lt;/li&gt;
+&lt;li&gt;特点：
+&lt;ol&gt;
+&lt;li&gt;不依赖于对象：静态成员函数不需要通过对象来调用，可以直接通过类名调用。这是因为它们属于类本身，而不是类的实例。&lt;/li&gt;
+&lt;li&gt;不能访问非静态成员：由于静态成员函数不依赖于具体的对象实例，它无法访问类的非静态成员（变量或函数），因为这些非静态成员需要对象实例来访问。&lt;/li&gt;
+&lt;li&gt;只能访问静态成员：静态成员函数只能访问类的静态成员变量或静态成员函数。&lt;/li&gt;
+&lt;li&gt;没有this指针：因为静态成员函数不属于任何对象实例，所以在静态成员函数内部没有this指针。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;从下而上，从派生类的指针转换为多重基类的某一个指针，有什么问题。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;override加与不加的区别&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;一个类中的引用，会在什么时候初始化&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;该引用成员必须在类的构造函数初始化列表中进行初始化。引用在C++中是必须被绑定到一个有效的对象或变量，因此它必须在对象创建时被初始化，且在对象的生命周期内不能再改变绑定的对象或变量。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;必须使用初始化列表&lt;/strong&gt;：引用成员变量必须在构造函数的初始化列表中进行初始化，不能在构造函数体内进行初始化。这是因为引用在C++中一旦被绑定，就不能再更改绑定对象，所以它在对象创建时就必须得到初始化。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;cp&#34;&gt;#include&lt;/span&gt; &lt;span class=&#34;cpf&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span class=&#34;cp&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;cp&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;MyClass&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;k&#34;&gt;private&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ref&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 引用成员变量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;public&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;c1&#34;&gt;// 构造函数，使用初始化列表初始化引用成员
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;MyClass&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;r&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ref&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;r&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;        &lt;span class=&#34;c1&#34;&gt;// 构造函数体内不能再次初始化ref
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;show&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;        &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;Value of ref: &amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ref&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;10&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;n&#34;&gt;MyClass&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;obj&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 在对象创建时初始化引用成员
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;obj&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;show&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 输出: Value of ref: 10
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;引用成员的生命周期：引用成员的生命周期与包含它的对象的生命周期一致。引用成员会一直引用初始化时绑定的对象或变量，直到包含它的对象被销毁。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;初始化顺序：在C++中，成员变量的初始化顺序是根据它们在类中声明的顺序，而不是在初始化列表中的顺序。因此，即使在初始化列表中按不同顺序列出成员变量，实际的初始化顺序仍然是根据它们在类中的声明顺序来执行的。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

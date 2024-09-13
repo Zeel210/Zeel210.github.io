@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="C++ 11\rC++11 是 C++ 的一个重要版本，被称为 C++ 的“现代化”版本。它引入了大量的新特性，极大地提升了代码的简洁性、可维护性和性能。以下是 C++11 的一些主要特性和标准： 1. 自动类型推导 (auto)\rC++11 引入了 auto 关键字，它可以根据变量初始化时的表达式自动推导类型。这减少了重复类型声明的冗余，特别是在使用复杂的模板时非常有用。 1 2 auto x = 5; // 自动推导为 int auto y = 3.14; // 自动推导为 double 2. Lambda 表达式\rLambda 表达式是匿名函数，即没有名字的函数。它可以在代码中直接定义并作为参数传递，特别适合于简短的、一次性的函数使用场景。Lambda 表达式常用于算法、事件处理和并发编程中。 1 2 auto sum = [](int a, int b) { return a + b; }; int result = sum(3, 4); // result = 7 c++14对Lambda有了一点更新，详见。 3. nullptr\r在 C++11 中，引入了 nullptr 来替代旧的 NULL 宏，nullptr 表示一个空指针，其类型为 std::nullptr_t，更加类型安全。">
+<title>C&#43;&#43; 11/14标准</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/c-11/14%E6%A0%87%E5%87%86/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="C++ 11/14标准">
+<meta property='og:description' content="C++ 11\rC++11 是 C++ 的一个重要版本，被称为 C++ 的“现代化”版本。它引入了大量的新特性，极大地提升了代码的简洁性、可维护性和性能。以下是 C++11 的一些主要特性和标准： 1. 自动类型推导 (auto)\rC++11 引入了 auto 关键字，它可以根据变量初始化时的表达式自动推导类型。这减少了重复类型声明的冗余，特别是在使用复杂的模板时非常有用。 1 2 auto x = 5; // 自动推导为 int auto y = 3.14; // 自动推导为 double 2. Lambda 表达式\rLambda 表达式是匿名函数，即没有名字的函数。它可以在代码中直接定义并作为参数传递，特别适合于简短的、一次性的函数使用场景。Lambda 表达式常用于算法、事件处理和并发编程中。 1 2 auto sum = [](int a, int b) { return a + b; }; int result = sum(3, 4); // result = 7 c++14对Lambda有了一点更新，详见。 3. nullptr\r在 C++11 中，引入了 nullptr 来替代旧的 NULL 宏，nullptr 表示一个空指针，其类型为 std::nullptr_t，更加类型安全。">
+<meta property='og:url' content='https://zeel210.github.io/p/c-11/14%E6%A0%87%E5%87%86/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='备忘笔记' /><meta property='article:tag' content='c&#43;&#43;' /><meta property='article:published_time' content='2024-07-02T19:20:18&#43;08:00'/><meta property='article:modified_time' content='2024-07-02T19:20:18&#43;08:00'/>
+<meta name="twitter:title" content="C++ 11/14标准">
+<meta name="twitter:description" content="C++ 11\rC++11 是 C++ 的一个重要版本，被称为 C++ 的“现代化”版本。它引入了大量的新特性，极大地提升了代码的简洁性、可维护性和性能。以下是 C++11 的一些主要特性和标准： 1. 自动类型推导 (auto)\rC++11 引入了 auto 关键字，它可以根据变量初始化时的表达式自动推导类型。这减少了重复类型声明的冗余，特别是在使用复杂的模板时非常有用。 1 2 auto x = 5; // 自动推导为 int auto y = 3.14; // 自动推导为 double 2. Lambda 表达式\rLambda 表达式是匿名函数，即没有名字的函数。它可以在代码中直接定义并作为参数传递，特别适合于简短的、一次性的函数使用场景。Lambda 表达式常用于算法、事件处理和并发编程中。 1 2 auto sum = [](int a, int b) { return a + b; }; int result = sum(3, 4); // result = 7 c++14对Lambda有了一点更新，详见。 3. nullptr\r在 C++11 中，引入了 nullptr 来替代旧的 NULL 宏，nullptr 表示一个空指针，其类型为 std::nullptr_t，更加类型安全。">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#c-11">C++ 11</a>
+      <ol>
+        <li><a href="#1-自动类型推导-auto">1. <strong>自动类型推导 (<code>auto</code>)</strong></a></li>
+        <li><a href="#2-lambda-表达式">2. <strong>Lambda 表达式</strong></a></li>
+        <li><a href="#3-nullptr">3. <strong><code>nullptr</code></strong></a></li>
+        <li><a href="#4-constexpr">4. <strong><code>constexpr</code></strong></a></li>
+        <li><a href="#5-右值引用与移动语义-rvalue-reference-and-move-semantics">5. <strong>右值引用与移动语义 (<code>rvalue reference</code> and <code>move semantics</code>)</strong></a></li>
+        <li><a href="#6-stdmove-和-stdforward">6. <strong><code>std::move</code> 和 <code>std::forward</code></strong></a></li>
+        <li><a href="#7-stdunique_ptr-和-stdshared_ptr">7. <strong><code>std::unique_ptr</code> 和 <code>std::shared_ptr</code></strong></a></li>
+        <li><a href="#8-stdthread-和-多线程支持">8. <strong><code>std::thread</code> 和 多线程支持</strong></a></li>
+        <li><a href="#9-范围-for-循环">9. <strong>范围 <code>for</code> 循环</strong></a></li>
+        <li><a href="#10-模板别名using-别名">10. <strong>模板别名（<code>using</code> 别名）</strong></a></li>
+        <li><a href="#11-enum-class强类型枚举">11. <strong><code>enum class</code>（强类型枚举）</strong></a></li>
+        <li><a href="#12-stdarray">12. <strong><code>std::array</code></strong></a></li>
+        <li><a href="#13-初始值列表initializer-list">13. <strong>初始值列表（Initializer List）</strong></a></li>
+        <li><a href="#14-委托构造函数">14. <strong>委托构造函数</strong></a></li>
+        <li><a href="#15-noexcept-关键字">15. <strong><code>noexcept</code> 关键字</strong></a></li>
+        <li><a href="#16-统一的初始化语法">16. <strong>统一的初始化语法</strong></a></li>
+        <li><a href="#17-override-和-final-关键字">17. <strong><code>override</code> 和 <code>final</code> 关键字</strong></a></li>
+        <li><a href="#18-stdtuple">18. <strong><code>std::tuple</code></strong></a></li>
+        <li><a href="#总结">总结</a></li>
+      </ol>
+    </li>
+    <li><a href="#c-14">C++ 14</a>
+      <ol>
+        <li><a href="#2-返回类型推导return-type-deduction">2. <strong>返回类型推导（Return Type Deduction）</strong></a></li>
+        <li><a href="#3-二进制字面量">3. <strong>二进制字面量</strong></a></li>
+        <li><a href="#4-下划线数字分隔符">4. <strong>下划线数字分隔符</strong></a></li>
+        <li><a href="#5-decltypeauto">5. <strong><code>decltype(auto)</code></strong></a></li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/c&#43;&#43;/" >
+                C&#43;&#43;
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/c-11/14%E6%A0%87%E5%87%86/">C&#43;&#43; 11/14标准</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Jul 02, 2024</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="c-11">C++ 11
+</h2><p>C++11 是 C++ 的一个重要版本，被称为 C++ 的“现代化”版本。它引入了大量的新特性，极大地提升了代码的简洁性、可维护性和性能。以下是 C++11 的一些主要特性和标准：</p>
+<h3 id="1-自动类型推导-auto">1. <strong>自动类型推导 (<code>auto</code>)</strong>
+</h3><p>C++11 引入了 <code>auto</code> 关键字，它可以根据变量初始化时的表达式自动推导类型。这减少了重复类型声明的冗余，特别是在使用复杂的模板时非常有用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>  <span class="c1">// 自动推导为 int
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">auto</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">3.14</span><span class="p">;</span>  <span class="c1">// 自动推导为 double
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="2-lambda-表达式">2. <strong>Lambda 表达式</strong>
+</h3><p>Lambda 表达式是匿名函数，即没有名字的函数。它可以在代码中直接定义并作为参数传递，特别适合于简短的、一次性的函数使用场景。Lambda 表达式常用于算法、事件处理和并发编程中。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">sum</span> <span class="o">=</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">sum</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>  <span class="c1">// result = 7
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>c++14对Lambda有了一点更新，详见。</p>
+<h3 id="3-nullptr">3. <strong><code>nullptr</code></strong>
+</h3><p>在 C++11 中，引入了 <code>nullptr</code> 来替代旧的 <code>NULL</code> 宏，<code>nullptr</code> 表示一个空指针，其类型为 <code>std::nullptr_t</code>，更加类型安全。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">复制代码
+</span></span><span class="line"><span class="cl">int* p = nullptr;  // 明确指定为空指针
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="4-constexpr">4. <strong><code>constexpr</code></strong>
+</h3><p><code>constexpr</code> 允许在编译时执行常量表达式计算。使用 <code>constexpr</code> 修饰的函数和变量可以在编译期计算结果，从而提升运行时性能。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">cpp复制代码constexpr</span> <span class="ne">int</span> <span class="n">square</span><span class="p">(</span><span class="ne">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">constexpr</span> <span class="ne">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">square</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>  <span class="o">//</span> <span class="err">在编译时计算结果</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="5-右值引用与移动语义-rvalue-reference-and-move-semantics">5. <strong>右值引用与移动语义 (<code>rvalue reference</code> and <code>move semantics</code>)</strong>
+</h3><p>C++11 引入了右值引用（<code>&amp;&amp;</code>），以及与之相关的移动语义，这使得资源的移动操作变得更加高效，避免了不必要的深拷贝，提升了性能，尤其在处理动态内存或大对象时。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码std::vector&lt;int&gt; v1 = {1, 2, 3, 4};
+</span></span><span class="line"><span class="cl">std::vector&lt;int&gt; v2 = std::move(v1);  // v1 的资源移动给 v2，避免了复制
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="6-stdmove-和-stdforward">6. <strong><code>std::move</code> 和 <code>std::forward</code></strong>
+</h3><ul>
+<li><code>std::move</code> 用于将左值强制转换为右值引用，允许资源被移动而不是复制。</li>
+<li><code>std::forward</code> 用于在模板中保持参数的左值或右值特性，通常在完美转发（perfect forwarding）中使用。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码template&lt;typename T&gt;
+</span></span><span class="line"><span class="cl">void process(T&amp;&amp; arg) {
+</span></span><span class="line"><span class="cl">    doSomething(std::forward&lt;T&gt;(arg));  // 保留传递参数的左右值特性
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="7-stdunique_ptr-和-stdshared_ptr">7. <strong><code>std::unique_ptr</code> 和 <code>std::shared_ptr</code></strong>
+</h3><p>C++11 引入了智能指针 <code>std::unique_ptr</code> 和 <code>std::shared_ptr</code>，它们是 RAII（资源获取即初始化）模式的一部分，帮助自动管理动态内存资源，避免手动调用 <code>delete</code>，从而减少内存泄漏的风险。</p>
+<ul>
+<li><code>std::unique_ptr</code>：一个独占所有权的指针。</li>
+<li><code>std::shared_ptr</code>：一个引用计数的指针，多个对象可以共享所有权。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码std::unique_ptr&lt;int&gt; ptr1 = std::make_unique&lt;int&gt;(10);  // 创建 unique_ptr
+</span></span><span class="line"><span class="cl">std::shared_ptr&lt;int&gt; ptr2 = std::make_shared&lt;int&gt;(20);  // 创建 shared_ptr
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="8-stdthread-和-多线程支持">8. <strong><code>std::thread</code> 和 多线程支持</strong>
+</h3><p>C++11 原生支持多线程编程，通过 <code>std::thread</code> 和相关的同步机制（如 <code>std::mutex</code>, <code>std::condition_variable</code>）让 C++ 的并发编程更加易用且标准化。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码void threadFunc() {
+</span></span><span class="line"><span class="cl">    std::cout &lt;&lt; &#34;Hello from thread!&#34; &lt;&lt; std::endl;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">std::thread t(threadFunc);  // 创建线程
+</span></span><span class="line"><span class="cl">t.join();  // 等待线程执行完毕
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="9-范围-for-循环">9. <strong>范围 <code>for</code> 循环</strong>
+</h3><p>C++11 引入了基于范围的 <code>for</code> 循环，简化了对容器或数组元素的遍历。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码std::vector&lt;int&gt; v = {1, 2, 3, 4};
+</span></span><span class="line"><span class="cl">for (int x : v) {
+</span></span><span class="line"><span class="cl">    std::cout &lt;&lt; x &lt;&lt; &#34; &#34;;  // 输出 1 2 3 4
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="10-模板别名using-别名">10. <strong>模板别名（<code>using</code> 别名）</strong>
+</h3><p>C++11 引入了 <code>using</code> 作为模板类型别名的语法糖，相比 <code>typedef</code> 更加直观且支持模板类型。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码template &lt;typename T&gt;
+</span></span><span class="line"><span class="cl">using Vec = std::vector&lt;T&gt;;  // 使用 using 定义模板别名
+</span></span><span class="line"><span class="cl">Vec&lt;int&gt; myVec;  // 相当于 std::vector&lt;int&gt; myVec;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="11-enum-class强类型枚举">11. <strong><code>enum class</code>（强类型枚举）</strong>
+</h3><p>C++11 引入了 <code>enum class</code>（强类型枚举），使得枚举更加类型安全，避免了不同枚举类型之间的隐式转换。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">cpp复制代码enum</span> <span class="k">class</span> <span class="ne">Color</span> <span class="p">{</span> <span class="n">Red</span><span class="p">,</span> <span class="n">Green</span><span class="p">,</span> <span class="n">Blue</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="ne">Color</span> <span class="n">color</span> <span class="o">=</span> <span class="ne">Color</span><span class="p">::</span><span class="n">Red</span><span class="p">;</span>  <span class="o">//</span> <span class="err">必须使用作用域来访问枚举值</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="12-stdarray">12. <strong><code>std::array</code></strong>
+</h3><p>C++11 引入了 <code>std::array</code>，它是一个固定大小的数组，提供 STL 容器的接口，可以与标准库算法一起使用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">复制代码
+</span></span><span class="line"><span class="cl">std::array&lt;int, 3&gt; arr = {1, 2, 3};
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="13-初始值列表initializer-list">13. <strong>初始值列表（Initializer List）</strong>
+</h3><p>C++11 支持通过花括号 <code>{}</code> 进行列表初始化，并引入了 <code>std::initializer_list</code> 允许用户定义的类可以使用列表初始化。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">复制代码
+</span></span><span class="line"><span class="cl">std::vector&lt;int&gt; v = {1, 2, 3, 4};  // 列表初始化
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="14-委托构造函数">14. <strong>委托构造函数</strong>
+</h3><p>C++11 支持类的一个构造函数调用另一个构造函数，减少了重复代码。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码class MyClass {
+</span></span><span class="line"><span class="cl">public:
+</span></span><span class="line"><span class="cl">    MyClass(int x) : MyClass(x, 0) {}  // 调用另一个构造函数
+</span></span><span class="line"><span class="cl">    MyClass(int x, int y) : x(x), y(y) {}
+</span></span><span class="line"><span class="cl">private:
+</span></span><span class="line"><span class="cl">    int x, y;
+</span></span><span class="line"><span class="cl">};
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="15-noexcept-关键字">15. <strong><code>noexcept</code> 关键字</strong>
+</h3><p>C++11 引入了 <code>noexcept</code> 关键字，用于标明某个函数不会抛出异常，帮助编译器优化代码。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码void myFunc() noexcept {
+</span></span><span class="line"><span class="cl">    // 该函数不会抛出异常
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="16-统一的初始化语法">16. <strong>统一的初始化语法</strong>
+</h3><p>C++11 引入了一种新的统一初始化语法，使用花括号 <code>{}</code> 来初始化对象、数组、类成员等，简化了不同对象的初始化方式。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码int x = {5};           // 等价于 int x = 5;
+</span></span><span class="line"><span class="cl">std::vector&lt;int&gt; v{1, 2, 3};  // 初始化 vector
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="17-override-和-final-关键字">17. <strong><code>override</code> 和 <code>final</code> 关键字</strong>
+</h3><ul>
+<li><code>override</code>：用于显式表明一个函数是重写基类中的虚函数，编译器会检查基类是否确实存在该虚函数，避免意外的错误。</li>
+<li><code>final</code>：用于禁止子类进一步重写某个虚函数。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码class Base {
+</span></span><span class="line"><span class="cl">    virtual void func() {}
+</span></span><span class="line"><span class="cl">};
+</span></span><span class="line"><span class="cl">class Derived : public Base {
+</span></span><span class="line"><span class="cl">    void func() override {}  // 显式声明重写基类函数
+</span></span><span class="line"><span class="cl">};
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="18-stdtuple">18. <strong><code>std::tuple</code></strong>
+</h3><p>C++11 引入了 <code>std::tuple</code>，它是可以存储多个不同类型对象的容器，非常适合用于函数返回多个值。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码std::tuple&lt;int, double, std::string&gt; myTuple(10, 3.14, &#34;hello&#34;);
+</span></span><span class="line"><span class="cl">int i = std::get&lt;0&gt;(myTuple);  // 获取 tuple 中的第一个元素
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="总结">总结
+</h3><p>C++11 是现代 C++ 编程的基础，它引入了许多强大的新特性，使得编写更高效、更易维护的代码成为可能。这些特性也为后续的 C++14、C++17 以及 C++20 奠定了基础。</p>
+<h2 id="c-14">C++ 14
+</h2><h3 id="2-返回类型推导return-type-deduction">2. <strong>返回类型推导（Return Type Deduction）</strong>
+</h3><p>C++14 允许函数的返回类型自动推导，不需要显式指定 <code>-&gt; decltype(auto)</code>。编译器会根据函数体的返回值来推导类型。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">auto</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>  <span class="c1">// 自动推导返回类型为 int
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="3-二进制字面量">3. <strong>二进制字面量</strong>
+</h3><p>C++14 引入了 <strong>二进制字面量</strong>，可以直接在代码中使用 <code>0b</code> 或 <code>0B</code> 前缀来表示二进制数字。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">复制代码
+</span></span><span class="line"><span class="cl">int bin = 0b1010;  // 二进制数 1010 表示十进制 10
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="4-下划线数字分隔符">4. <strong>下划线数字分隔符</strong>
+</h3><p>在 C++14 中，可以使用下划线 <code>_</code> 作为数字的分隔符，方便阅读长数字。它不影响实际的数值。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">复制代码
+</span></span><span class="line"><span class="cl">int million = 1&#39;000&#39;000;  // 等同于 1000000
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="5-decltypeauto">5. <strong><code>decltype(auto)</code></strong>
+</h3><p><code>decltype(auto)</code> 是一种推导类型的方式，它基于表达式的类型推导而返回具体类型。它比 <code>auto</code> 更加精确，可以保留引用类型和常量性。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cpp复制代码int x = 10;
+</span></span><span class="line"><span class="cl">decltype(auto) y = (x);  // y 的类型为 int&amp;
+</span></span></code></pre></td></tr></table>
+</div>
+</div>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/">备忘笔记</a>
+        
+            <a href="/tags/c&#43;&#43;/">C&#43;&#43;</a>
+        
+    </section>
+
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/c-%E6%8A%80%E6%9C%AFqa%E4%BA%8C/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">C&#43;&#43;技术Q&amp;A（二）</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/c-%E6%8A%80%E6%9C%AFqa%E4%B8%80/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">C&#43;&#43;技术Q&amp;A（一）</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/c-lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E4%B8%8Econstexpr/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">C&#43;&#43; lambda表达式与constexpr</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

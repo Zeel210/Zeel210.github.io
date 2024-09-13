@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="话题相关命令\r查看话题列表 1 ros2 topic list 查看带类型的话题列表 1 ros2 topic list -t 在终端预览话题内容 1 ros2 topic echo &lt;topic_name&gt; 使用命令发布消息 1 ros2 topic pub &lt;topic_name&gt; &lt;msg_type&gt; &#39;&lt;args&gt;&#39; eg： 发送一次 1 ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist &#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}&#34; 循环发送： &ndash;rate 后面参数为频率（次/秒） 1 ros2 topic pub --rate 1 /turtle1/cmd_vel geometry_msgs/msg/Twist &#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.">
+<title>常用调试工具与命令</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/%E5%B8%B8%E7%94%A8%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7%E4%B8%8E%E5%91%BD%E4%BB%A4/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="常用调试工具与命令">
+<meta property='og:description' content="话题相关命令\r查看话题列表 1 ros2 topic list 查看带类型的话题列表 1 ros2 topic list -t 在终端预览话题内容 1 ros2 topic echo &lt;topic_name&gt; 使用命令发布消息 1 ros2 topic pub &lt;topic_name&gt; &lt;msg_type&gt; &#39;&lt;args&gt;&#39; eg： 发送一次 1 ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist &#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}&#34; 循环发送： &ndash;rate 后面参数为频率（次/秒） 1 ros2 topic pub --rate 1 /turtle1/cmd_vel geometry_msgs/msg/Twist &#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.">
+<meta property='og:url' content='https://zeel210.github.io/p/%E5%B8%B8%E7%94%A8%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7%E4%B8%8E%E5%91%BD%E4%BB%A4/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='ros2' /><meta property='article:tag' content='备忘笔记' /><meta property='article:published_time' content='2023-10-05T17:23:28&#43;08:00'/><meta property='article:modified_time' content='2023-10-05T17:23:28&#43;08:00'/>
+<meta name="twitter:title" content="常用调试工具与命令">
+<meta name="twitter:description" content="话题相关命令\r查看话题列表 1 ros2 topic list 查看带类型的话题列表 1 ros2 topic list -t 在终端预览话题内容 1 ros2 topic echo &lt;topic_name&gt; 使用命令发布消息 1 ros2 topic pub &lt;topic_name&gt; &lt;msg_type&gt; &#39;&lt;args&gt;&#39; eg： 发送一次 1 ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist &#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}&#34; 循环发送： &ndash;rate 后面参数为频率（次/秒） 1 ros2 topic pub --rate 1 /turtle1/cmd_vel geometry_msgs/msg/Twist &#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#话题相关命令">话题相关命令</a></li>
+    <li><a href="#类型相关命令">类型相关命令</a></li>
+    <li><a href="#服务相关命令">服务相关命令</a></li>
+    <li><a href="#参数相关命令">参数相关命令</a></li>
+    <li><a href="#动作相关命令">动作相关命令</a></li>
+    <li><a href="#图形化相关命令">图形化相关命令</a></li>
+    <li><a href="#程序运行命令">程序运行命令</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/ros2/" >
+                Ros2
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/%E5%B8%B8%E7%94%A8%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7%E4%B8%8E%E5%91%BD%E4%BB%A4/">常用调试工具与命令</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Oct 05, 2023</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="话题相关命令">话题相关命令
+</h2><ol>
+<li>查看话题列表</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic list
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="2">
+<li>查看带类型的话题列表</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic list -t
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="3">
+<li>在终端预览话题内容</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic <span class="nb">echo</span> &lt;topic_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="4">
+<li>使用命令发布消息</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic pub &lt;topic_name&gt; &lt;msg_type&gt; <span class="s1">&#39;&lt;args&gt;&#39;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg：</p>
+<p>发送一次</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist <span class="s2">&#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>循环发送：</p>
+<p>&ndash;rate 后面参数为频率（次/秒）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic pub --rate <span class="m">1</span> /turtle1/cmd_vel geometry_msgs/msg/Twist <span class="s2">&#34;{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>​	1.5 <strong>查看话题发布频率</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 topic hz /turtle1/pose
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="类型相关命令">类型相关命令
+</h2><p>查看类型定义</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 interface show &lt;msg type&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 interface show geometry_msgs/msg/Twist
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="服务相关命令">服务相关命令
+</h2><ol>
+<li>查看服务列表</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service list
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="2">
+<li>查看服务类型</li>
+</ol>
+<p>查看单个：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service <span class="nb">type</span> &lt;service_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果返回“std_srvs/srv/Empty”代表服务调用在发出请求时不发送任何数据</p>
+<p>查看全部：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service list -t
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="3">
+<li>服务查找</li>
+</ol>
+<p>依据服务类型进行查找</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service find &lt;type_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="4">
+<li>查看服务类型定义</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 interface show &lt;type_name&gt;.srv
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="5">
+<li>使用命令调用服务在做此项操作前需先知道什么是服务类型，如何找到服务的类型，以及如何找到该类型参数的结构</li>
+</ol>
+<p>调用服务：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service call &lt;service_name&gt; &lt;service_type&gt; &lt;arguments&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<p>参数类型为std_srvs/srv/Empty可省略参数：</p>
+<p>首先Empty 类型化服务没有任何参数，此命令将清除海龟绘制的任何线条的turtlesim窗口</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service call /clear std_srvs/srv/Empty
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>调用带有参数的服务：</p>
+<p>新加入一只海龟，执行此操作后不会添加新的节点，而是会在所操作的节点上增加新的话题，新的服务</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 service call /spawn turtlesim/srv/Spawn <span class="s2">&#34;{x: 2, y: 2, theta: 0.2, name: &#39;&#39;}&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意：上文中“x: 2”间的空格不可少</p>
+<h2 id="参数相关命令">参数相关命令
+</h2><ol>
+<li>查看参数列表</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param list
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="2">
+<li>获取参数</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param get &lt;node_name&gt; &lt;parameter_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param get /turtlesim background_g
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="3">
+<li>设置参数</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"> ros2 param <span class="nb">set</span> &lt;node_name&gt; &lt;parameter_name&gt; &lt;value&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param <span class="nb">set</span> /turtlesim background_r <span class="m">150</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>使用 set 命令设置参数只会在当前会话中更改它们，而不会永久更改。但是，您可以保存设置并在下次启动节点时重新加载它们。</p>
+<ol start="4">
+<li>参数转储</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param dump &lt;node_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param dump /turtlesim
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>存储的同时设置保存路径：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param dump &lt;node_name&gt; --output-dir &lt;OUTPUT_DIR&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param dump /turtlesim  --output-dir /media/xiejiapeng/jpx/
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="5">
+<li>参数加载</li>
+</ol>
+<p>此方法会将参数加载到正在运行的节点</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param load &lt;node_name&gt; &lt;parameter_file&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 param load /turtlesim ./turtlesim.yaml
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="6">
+<li>节点启动时加载参数文件</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run &lt;package_name&gt; &lt;executable_name&gt; --ros-args --params-file &lt;file_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run turtlesim turtlesim_node --ros-args --params-file ./turtlesim.yaml
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="动作相关命令">动作相关命令
+</h2><p>Action是建立在话题和服务之上的。它们的功能与服务类似，除了动作是可抢占的 (您可以在执行时取消它们)。他们也提供稳定的反馈，而不是返回单一响应的服务。</p>
+<p>Action使用客户端-服务器模型，类似于出版商-订户模型 (在 <a class="link" href="http://dev.ros2.fishros.com/doc/Tutorials/Topics/Understanding-ROS2-Topics.html"  target="_blank" rel="noopener"
+    >topics tutorial</a> 中描述)。“动作客户端” 节点向 “动作服务器” 节点发送目标，该节点确认目标并返回反馈流和结果。</p>
+<ol>
+<li>查看动作列表</li>
+</ol>
+<p>查看带类型的动作列表</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 action list -t
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="2">
+<li>查看动作类型结构</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 interface show &lt;action_type&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 interface show turtlesim/action/RotateAbsolute
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>将返回：</p>
+<p>/RotateAbsolute # The desired heading in radians float32 theta &mdash; # The angular displacement in radians to the starting position float32 delta &mdash; # The remaining rotation in radians float32 remaining</p>
+<p>此消息的第一部分，在 &mdash; 上方，是目标请求的结构 (数据类型和名称)。下一节是结果的结构。最后一节是反馈的结构。</p>
+<ol start="3">
+<li>发送动作目标</li>
+</ol>
+<p>不带实时反馈，仅带目标和结果</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 action send_goal &lt;action_name&gt; &lt;action_type&gt; &lt;values&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 action send_goal /turtle1/rotate_absolute turtlesim/action/RotateAbsolute <span class="s2">&#34;{theta: 1.57}&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>携带实时反馈，反馈剩余待完成内容，需要在上文基础上添加“ &ndash;feedback”</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 action send_goal &lt;action_name&gt; &lt;action_type&gt; &lt;values&gt; --feedback
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 action send_goal /turtle1/rotate_absolute turtlesim/action/RotateAbsolute <span class="s2">&#34;{theta: -1.57}&#34;</span> --feedback
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>终端将返回消息:</p>
+<blockquote>
+<p>Sending goal:  theta: -1.57Goal accepted with ID: e6092c831f994afda92f0086f220da27Feedback: remaining: -3.1268222332000732Feedback: remaining: -3.1108222007751465…Result: delta: 3.1200008392333984Goal finished with status: SUCCEEDED</p>
+</blockquote>
+<p>goal为旋转的目标弧度（目标结果），Feedback为对剩余弧度（剩余动作内容）的实时反馈，Result为最终运动弧度（实际动作内容）</p>
+<h2 id="图形化相关命令">图形化相关命令
+</h2><ol>
+<li>rqt</li>
+</ol>
+<p>一个多功能的图形化调试应用。</p>
+<p>启动：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">rqt
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>第一次运行rqt后，窗口将为空白此时需从顶部的菜单栏中选择 插件&gt; 服务&gt;调用服务（<strong>Plugins</strong> &gt; <strong>Services</strong> &gt; <strong>Service Caller</strong> ）。</p>
+<ol start="2">
+<li>rqt_graph</li>
+</ol>
+<p>重点用于查看话题和节点之间的发布订阅关系</p>
+<p>启动：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">rqt_graph
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="3">
+<li>rqt_console</li>
+</ol>
+<p>用于查看ros的系统日志</p>
+<p>启动：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run rqt_console rqt_console
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="程序运行命令">程序运行命令
+</h2><ol>
+<li>运行程序</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run &lt;package_name&gt; &lt;executable_name&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>eg:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run turtlesim turtle_teleop_key
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="2">
+<li>重映射</li>
+</ol>
+<p>将默认节点属性 (如节点名称、话题名称、服务名称等) 重新分配给自定义值</p>
+<p>重映射节点名称示例：</p>
+<p>&ndash;ros-args &ndash;remap 可省略</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run turtlesim turtlesim_node --ros-args --remap __node:<span class="o">=</span>my_turtle
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>同时重映射发布或订阅的话题名和节点名示例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run turtlesim turtle_teleop_key /turtle1/cmd_vel:<span class="o">=</span>/my_turtle/cmd_vel  __node:<span class="o">=</span>my_key
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>或者</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ros2 run turtlesim turtle_teleop_key --ros-args --remap /turtle1/cmd_vel:<span class="o">=</span>/my_turtle/cmd_vel --remap  __node:<span class="o">=</span>my_key
+</span></span></code></pre></td></tr></table>
+</div>
+</div>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/ros2/">Ros2</a>
+        
+            <a href="/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/">备忘笔记</a>
+        
+    </section>
+
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/ros2-%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Ros2 发布订阅</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Slam on 潦草小驴</title>
+        <link>https://zeel210.github.io/tags/slam/</link>
+        <description>Recent content in Slam on 潦草小驴</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Thu, 11 Apr 2024 20:01:28 +0800</lastBuildDate><atom:link href="https://zeel210.github.io/tags/slam/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>多投影仪自动化融合思路</title>
+        <link>https://zeel210.github.io/p/%E5%A4%9A%E6%8A%95%E5%BD%B1%E4%BB%AA%E8%87%AA%E5%8A%A8%E5%8C%96%E8%9E%8D%E5%90%88%E6%80%9D%E8%B7%AF/</link>
+        <pubDate>Thu, 11 Apr 2024 20:01:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/p/%E5%A4%9A%E6%8A%95%E5%BD%B1%E4%BB%AA%E8%87%AA%E5%8A%A8%E5%8C%96%E8%9E%8D%E5%90%88%E6%80%9D%E8%B7%AF/</guid>
+        <description>&lt;h2 id=&#34;方案a技术原理概述&#34;&gt;方案A技术原理概述
+&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;通过手动粘贴与测量，获取投影面上所有Aruco二维码的ID，与二维码中心点的二维物理坐标的对应关系。&lt;/li&gt;
+&lt;li&gt;借助高精度相机和格雷码结构光技术，估计出每个二维码中心点在投影画面中的二维像素坐标。&lt;/li&gt;
+&lt;li&gt;利用每个二维码的ID，建立每个二维码中心点的&lt;strong&gt;二维物理坐标&lt;/strong&gt;&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsjSYTjl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;和&lt;strong&gt;投影仪二维像素坐标&lt;/strong&gt;&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsqBfTmk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;的匹配关系。再利用这些离散的匹配关系，通过插值，构造目标平面上&lt;strong&gt;投影仪坐标系中每个点&lt;/strong&gt;与&lt;strong&gt;物理平面坐标&lt;/strong&gt;的对应关系。&lt;/li&gt;
+&lt;li&gt;这样，不同的投影仪画面都与同一个物理平面做了匹配。假设有一幅图像需要两个投影仪共同投射，每台投影仪只需要知道这幅图像的某个像素Pixel对应在物理平面上是哪一点&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsKJiTNm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;，就可以用它的某个像素&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpszNggmn.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;,来投射这幅图像的这一像素Pixel。因此，图像上的每个像素点，只会被不同投影仪投射到物理平面上唯一的一个位置，投影融合就完成了。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsabt2Fj.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;方案设计baruco二维码三维重建&#34;&gt;方案设计B——Aruco二维码+三维重建
+&lt;/h2&gt;&lt;h3 id=&#34;与方案a的重要区别&#34;&gt;与方案A的重要区别
+&lt;/h3&gt;&lt;p&gt;在方案A中，投影平面上的二维码的物理位置由人工测量获取，同时它们在投影仪画面中的像素位置，是借助结构光直接或间接估算出来的。&lt;/p&gt;
+&lt;p&gt;在方案B中，&lt;strong&gt;二维码由投影仪直接投射到投影平面上，这个方法直接省去了人工粘贴二维码的操作&lt;/strong&gt;。而这样一来，它们在投影仪画面中的像素位置就变成了已知量，它们的物理位置变成了未知量。&lt;/p&gt;
+&lt;p&gt;因此，新方案重新设计了一套基于三维重建的坐标匹配方法，来计算每个二维码中心点在物理坐标系中的位置。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;区别&lt;/th&gt;
+&lt;th&gt;旧方案&lt;/th&gt;
+&lt;th&gt;新方案1&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;二维码中心点物理位置&lt;/td&gt;
+&lt;td&gt;人工粘贴并测量&lt;/td&gt;
+&lt;td&gt;三维重建，计算得到&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;二维码中心点投影像素位置&lt;/td&gt;
+&lt;td&gt;结构光，计算得到&lt;/td&gt;
+&lt;td&gt;投影仪投射，位置已知&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;投影ROI边界约束方法&lt;/td&gt;
+&lt;td&gt;在ROI边界处粘贴二维码约束&lt;/td&gt;
+&lt;td&gt;在ROI边界处粘贴圆形锚点约束&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;目标对象&lt;/td&gt;
+&lt;td&gt;单个投影面&lt;/td&gt;
+&lt;td&gt;五个投影面在内的整个场地&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;方案b流程&#34;&gt;方案B流程
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpstUlR9m.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;给场地中每个投影面的四个顶点处粘贴上红色marker点，相邻平面的共同顶点共用一个marker点（锚点）。测量并定义每个锚点在物理空间P（世界坐标系）中的位置，用集合&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpslYSRNl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;表示。&lt;/li&gt;
+&lt;li&gt;给场地内所有投影仪都准备一张二维码阵列图像。每个二维码的id唯一且已知，它们在图像中的像素位置已知，记为&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsaaFnIm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsmplOhl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;将一台已完成标定的高分辨率相机用三脚架固定在场地中，不断调整它的位置和朝向Pose，使它的FOV能覆盖到场地上所有锚点和二维码。每调整一次Pose，让相机当前FOV中所有投影区域所负责的投影仪，依次投射自己的二维码图像（保证不同投影仪的二维码不重叠），同时相机拍摄一张照片。调整相机的Pose时，应确保相机拍摄的照片符合三维重建要求。&lt;/li&gt;
+&lt;li&gt;利用相机照片中场地所有锚点和二维码中心点（码点）信息，对场地五个投影面（四周和地面）进行三维重建：获取所有锚点和码点在虚拟空间坐标系V中的位置，用集合&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsbp2IRk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;，&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsZdt7Uk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;表示。&lt;/li&gt;
+&lt;li&gt;进行坐标系变换。根据&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsxR5F4l.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;和&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpshm9hxk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;的对应关系，利用相似变换（or 刚体、仿射变换，找一个最合适的），求得码点在世界坐标系P中的位置&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsz3NR2m.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;。&lt;/li&gt;
+&lt;li&gt;对于每一个投影平面，都利用这个平面上的锚点在P中的坐标，计算出这个平面在P中的平面方程。再计算所有码点坐标&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsysEahm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;，在它们所属平面上的投影&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsrS3w6k.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;。&lt;/li&gt;
+&lt;li&gt;利用码点在各自投影仪的二维坐标&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpschbjgk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;，和他们在坐标系P中的平面投影坐标&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsFXRJAk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;的映射关系，估计出锚点在每个投影仪的二维坐标&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsounppk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;（锚点的&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsECZe2i.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;是已知的，见1）。&lt;/li&gt;
+&lt;li&gt;利用(&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsbXlfXm.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;,&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wps3r9Nin.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;)，(&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsiLxlbj.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;,&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsLLoien.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;)匹配关系，用插值法计算出目标平面上投影仪坐标系中每个点与物理平面坐标的对应关系。&lt;/li&gt;
+&lt;li&gt;第7步得到的数据在形式上跟旧方案的数据是一致的，有了匹配关系后，回到旧方案的最后步骤，完成投影仪融合。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;可能存在的问题&#34;&gt;可能存在的问题
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;一个物理投影面边界处的点在投影仪坐标系中的位置是无法直接获取的，而是通过&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsKkDdfk.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;和&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsQdGJfn.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;的匹配关系估计出来的。为了保证边界处匹配关系的精度，就应该存在一些投影仪投射的二维码，尽可能贴近物理投影平面的边界处。&lt;/li&gt;
+&lt;li&gt;误差的累计可能会让投影面交界处的融合精度很差，出现画面对不齐的情况。两个相邻投影平面中，投影仪坐标和物理平面坐标的匹配关系，可能在两个平面交界处无法保持均匀的统一。即两个平面上统一的信息只有交界处上下方两个锚点，有限的信息可能无法约束中间远离锚点的边界处的画面的统一性。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;因此，基于二维码的新方案的顺利运行，就需要每个投影仪有能力在自己负责的投影面的边缘处，投射出可被识别的二维码，这个功能可能需要人工介入，或需要复杂的设计。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsij6b6l.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;方案c设计格雷码三维重建&#34;&gt;方案C设计——格雷码+三维重建
+&lt;/h2&gt;&lt;p&gt;• 与方案B不同的是，此方案利用格雷码来重建三维点云，进而完成不同坐标系的匹配。&lt;/p&gt;
+&lt;p&gt;• 利用格雷码结构光技术，结合相机多视角三维重建，我们可以获取大量的投影仪坐标系&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsnCOWMl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;与物理平面坐标系&lt;img src=&#34;https://zeel210.github.io/images/ksohtml/wpsV15tAl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;的对应关系，这样的对应关系在本质上跟Aruco二维码提供的信息是一致的。除了重建三维点云的方法从二维码变为格雷码结构光外，其他步骤是一样的。&lt;/p&gt;
+&lt;p&gt;• 但&lt;strong&gt;区别&lt;/strong&gt;就在于，这个方案能获取的有效匹配点更稠密，在投影平面边界处能提供更多的有效信息，来提高估计出来的投影面顶点的投影仪像素坐标的精度。同时，投影仪画面投射在自己负责的投影面之外的区域，也能帮助提高三维重建和坐标匹配的精度。&lt;/p&gt;
+&lt;p&gt;• 这个方案的一个已知缺点是，执行耗时较长。因为每固定一个相机机位，相机FOV内的所有投影仪都要投射数量较大的光栅图。还因为结构光技术的数据量较大，处理时间长。&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

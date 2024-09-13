@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="自己的定义\r几何相机标定（Geometric Camera Calibration），简称相机标定（Camera Calibration），在英文中也称**“Camera Resectioning”，是一个根据给定的照片或视频，计算估计出相机模型的几何参数的过程。**这些几何参数描述了物体从三维世界到成像平面上各坐标点的对应关系。在计算机视觉领域，这些标定得到的参数可以用来校正镜头失真，以世界单位测量物体的大小，或确定相机在场景中的位置等。在我们的项目中，相机标定的结果主要用于三维场景重建。 相机标定的通俗解释\r如前文所言，相机标定是一个确定特定相机几何参数的过程，以便让相机有能力完成一些特定的精确的操作。如果没有标定，相机的几何参数是未知的，或不精确的。我们拍摄了一张照片，却无法用照片来做我们想做的事：我们的计算机不知道如何处理它来去除畸变，不知道如何测量图像中某物体的真正尺寸，等等。我们可以用等式来ji近似描述这个过程，这里x是输入，y是输出，a是相机的几何参数。那么，相机标定的思路，就是“利用多组(x,y)对，建立一个方程组，来求取这组未知量a”。 相机的光学成像，是一个将三维世界转换成二维图像的过程。因此我们将三维世界物体表面点的坐标作为输入，二维图像作为输出，来估算出一个可描述相机真实状态的“数学模型”。计算机利用这个相机模型，就可以进行特定的精确操作。 相机成像模型\r众所周知，一般的相机由一组透镜和感光元件组成，利用透镜成像原理在感光元件上捕获图像。但相机的透镜成像模型较为复杂，涉及到透镜的形状、曲率、畸变等复杂光学性质，这给我们利用三维场景与二维照片来求取相机模型参数带来了困难。不过，我们在标定时关注的只是相机的投影几何关系，而可以忽略透镜的复杂光学成像过程，因此，小孔成像模型通常被用来替换透镜成像模型来计算相机的参数。但小孔成像模型是一种理想化的模型，光线通过一个小孔后直线传播，不发生折射和畸变，没有能力描述相机中的透镜畸变问题。因此，为了准确模拟真实的相机（这里不考虑视场角大于195度的鱼眼相机），一般的相机标定模型包括一个小孔成像模型和径向、切向镜头畸变。 在小孔成像模型中，光线穿过小孔，在相机的另一侧投射出一个倒立的图像。这样，虚像平面位于相机前面，包含了场景的颠倒图像。那么，为了构建相机成像模型，估算相机几何参数，就需要用数学语言描述小孔成像的过程，这个过程涉及到了四个坐标系。 四个坐标系\r• 世界坐标系：用户定义的三维世界的坐标系，用来描述目标物在真实世界里的位置以及相机所在的位置。原点和方向可以任意设置。 • 相机坐标系：在相机上建立的坐标系，为了从相机的角度描述物体位置而定义，作为沟通世界坐标系和图像/像素坐标系的中间一环。通常以相机的光心为坐标原点，x轴和y轴平行于图像坐标系的x轴和y轴，z轴为相机的光轴。 • 图像坐标系：为了描述成像过程中物体从相机坐标系到图像坐标系的投影投射关系而引入 ，方便进一步得到像素坐标系下的坐标。与成像平面重合，以成像平面的中心（光轴与成像平面的交点）为坐标原点，x 轴和 y轴分别平行于成像平面的两条边。 • 像素坐标系：用来描述物体成像后的像点在数字图像上（相片）的坐标，以像素个数为单位，是我们真正从相机内读取到的信息所在的坐标系。与成像平面重合，以成像平面的左上角顶点为原点，x 轴和 y 轴分别平行于图像坐标系的x轴和y轴。 接下来我们用这个四个坐标系来描述世界中物体表面的一点在相机上成像的过程，记该点的坐标： 世界坐标系：(Xw,Yw,Zw) 相机坐标系： (Xc,Yc,Zc) 图像坐标系：(x,y) 像素坐标系：(u,v) 世界坐标系到相机坐标系（相机外参）\r有了世界坐标系，我们首先知道了物体表面一点P的位置(Xw,Yw,Zw)。为了知道这一点相对于相机的空间位置，就需要做从世界坐标系到相机坐标系的刚体变换。引入齐次坐标，求取世界坐标系相对相机坐标系的旋转矩阵R和平移向量T，就可以将点转换到相机坐标系下： 矩阵我们称为相机外参。其中 R 为 3×3 的正交阵,向量 t 表示 3×1 的三维平移量。 相机坐标系到像素坐标系（相机内参）\r相机坐标系到图像坐标系 对于三维相机坐标系中的一点 Pc,其对应在成像平面上的成像点，是 Pc 与光心 O 的连线与图像平面的交点 p。又有相机焦距 f 。根据三角形相似定理可以推出相机坐标系与图像坐标的关系满足以下关系: 写成齐次坐标的矩阵形式： 图像坐标系到像素坐标系 图像坐标系下的坐标，依然是以“米”为单位的连续量。与它不同，像素坐标系以一个像素(pixel)为单位，原点在图像的左上方，u轴向右，v轴向下。假设是相机光心（图像坐标系原点）对应的像素坐标，某个像素点p坐标为(u,v)，dx和dy表示图像中每个像素在成像平面中的物理尺寸。则像素坐标系与成像平面坐标系之间有如下转换公式： 综合上述公式，就得到了从世界坐标系到像素坐标系的转换公式： 其中fx = f/dx,fy = f/dy。记 \u200b 那么这里矩阵M表示从世界坐标系到像素坐标系的投影映射，一般称为相机矩阵(Camera Matrix)。K就是相机内部矩阵，K中的参数就是相机内参(Intrinsic Parameters)，RT称作相机外部矩阵，它本身也就是相机外参(Extrinsic Parameters)。 小孔相机参数的物理意义\r经过上面的推导，我们就可以知道相机内外参的物理意义了。">
+<title>相机标定原理概述</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="相机标定原理概述">
+<meta property='og:description' content="自己的定义\r几何相机标定（Geometric Camera Calibration），简称相机标定（Camera Calibration），在英文中也称**“Camera Resectioning”，是一个根据给定的照片或视频，计算估计出相机模型的几何参数的过程。**这些几何参数描述了物体从三维世界到成像平面上各坐标点的对应关系。在计算机视觉领域，这些标定得到的参数可以用来校正镜头失真，以世界单位测量物体的大小，或确定相机在场景中的位置等。在我们的项目中，相机标定的结果主要用于三维场景重建。 相机标定的通俗解释\r如前文所言，相机标定是一个确定特定相机几何参数的过程，以便让相机有能力完成一些特定的精确的操作。如果没有标定，相机的几何参数是未知的，或不精确的。我们拍摄了一张照片，却无法用照片来做我们想做的事：我们的计算机不知道如何处理它来去除畸变，不知道如何测量图像中某物体的真正尺寸，等等。我们可以用等式来ji近似描述这个过程，这里x是输入，y是输出，a是相机的几何参数。那么，相机标定的思路，就是“利用多组(x,y)对，建立一个方程组，来求取这组未知量a”。 相机的光学成像，是一个将三维世界转换成二维图像的过程。因此我们将三维世界物体表面点的坐标作为输入，二维图像作为输出，来估算出一个可描述相机真实状态的“数学模型”。计算机利用这个相机模型，就可以进行特定的精确操作。 相机成像模型\r众所周知，一般的相机由一组透镜和感光元件组成，利用透镜成像原理在感光元件上捕获图像。但相机的透镜成像模型较为复杂，涉及到透镜的形状、曲率、畸变等复杂光学性质，这给我们利用三维场景与二维照片来求取相机模型参数带来了困难。不过，我们在标定时关注的只是相机的投影几何关系，而可以忽略透镜的复杂光学成像过程，因此，小孔成像模型通常被用来替换透镜成像模型来计算相机的参数。但小孔成像模型是一种理想化的模型，光线通过一个小孔后直线传播，不发生折射和畸变，没有能力描述相机中的透镜畸变问题。因此，为了准确模拟真实的相机（这里不考虑视场角大于195度的鱼眼相机），一般的相机标定模型包括一个小孔成像模型和径向、切向镜头畸变。 在小孔成像模型中，光线穿过小孔，在相机的另一侧投射出一个倒立的图像。这样，虚像平面位于相机前面，包含了场景的颠倒图像。那么，为了构建相机成像模型，估算相机几何参数，就需要用数学语言描述小孔成像的过程，这个过程涉及到了四个坐标系。 四个坐标系\r• 世界坐标系：用户定义的三维世界的坐标系，用来描述目标物在真实世界里的位置以及相机所在的位置。原点和方向可以任意设置。 • 相机坐标系：在相机上建立的坐标系，为了从相机的角度描述物体位置而定义，作为沟通世界坐标系和图像/像素坐标系的中间一环。通常以相机的光心为坐标原点，x轴和y轴平行于图像坐标系的x轴和y轴，z轴为相机的光轴。 • 图像坐标系：为了描述成像过程中物体从相机坐标系到图像坐标系的投影投射关系而引入 ，方便进一步得到像素坐标系下的坐标。与成像平面重合，以成像平面的中心（光轴与成像平面的交点）为坐标原点，x 轴和 y轴分别平行于成像平面的两条边。 • 像素坐标系：用来描述物体成像后的像点在数字图像上（相片）的坐标，以像素个数为单位，是我们真正从相机内读取到的信息所在的坐标系。与成像平面重合，以成像平面的左上角顶点为原点，x 轴和 y 轴分别平行于图像坐标系的x轴和y轴。 接下来我们用这个四个坐标系来描述世界中物体表面的一点在相机上成像的过程，记该点的坐标： 世界坐标系：(Xw,Yw,Zw) 相机坐标系： (Xc,Yc,Zc) 图像坐标系：(x,y) 像素坐标系：(u,v) 世界坐标系到相机坐标系（相机外参）\r有了世界坐标系，我们首先知道了物体表面一点P的位置(Xw,Yw,Zw)。为了知道这一点相对于相机的空间位置，就需要做从世界坐标系到相机坐标系的刚体变换。引入齐次坐标，求取世界坐标系相对相机坐标系的旋转矩阵R和平移向量T，就可以将点转换到相机坐标系下： 矩阵我们称为相机外参。其中 R 为 3×3 的正交阵,向量 t 表示 3×1 的三维平移量。 相机坐标系到像素坐标系（相机内参）\r相机坐标系到图像坐标系 对于三维相机坐标系中的一点 Pc,其对应在成像平面上的成像点，是 Pc 与光心 O 的连线与图像平面的交点 p。又有相机焦距 f 。根据三角形相似定理可以推出相机坐标系与图像坐标的关系满足以下关系: 写成齐次坐标的矩阵形式： 图像坐标系到像素坐标系 图像坐标系下的坐标，依然是以“米”为单位的连续量。与它不同，像素坐标系以一个像素(pixel)为单位，原点在图像的左上方，u轴向右，v轴向下。假设是相机光心（图像坐标系原点）对应的像素坐标，某个像素点p坐标为(u,v)，dx和dy表示图像中每个像素在成像平面中的物理尺寸。则像素坐标系与成像平面坐标系之间有如下转换公式： 综合上述公式，就得到了从世界坐标系到像素坐标系的转换公式： 其中fx = f/dx,fy = f/dy。记 \u200b 那么这里矩阵M表示从世界坐标系到像素坐标系的投影映射，一般称为相机矩阵(Camera Matrix)。K就是相机内部矩阵，K中的参数就是相机内参(Intrinsic Parameters)，RT称作相机外部矩阵，它本身也就是相机外参(Extrinsic Parameters)。 小孔相机参数的物理意义\r经过上面的推导，我们就可以知道相机内外参的物理意义了。">
+<meta property='og:url' content='https://zeel210.github.io/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2023-08-05T23:34:28&#43;08:00'/><meta property='article:modified_time' content='2023-08-05T23:34:28&#43;08:00'/>
+<meta name="twitter:title" content="相机标定原理概述">
+<meta name="twitter:description" content="自己的定义\r几何相机标定（Geometric Camera Calibration），简称相机标定（Camera Calibration），在英文中也称**“Camera Resectioning”，是一个根据给定的照片或视频，计算估计出相机模型的几何参数的过程。**这些几何参数描述了物体从三维世界到成像平面上各坐标点的对应关系。在计算机视觉领域，这些标定得到的参数可以用来校正镜头失真，以世界单位测量物体的大小，或确定相机在场景中的位置等。在我们的项目中，相机标定的结果主要用于三维场景重建。 相机标定的通俗解释\r如前文所言，相机标定是一个确定特定相机几何参数的过程，以便让相机有能力完成一些特定的精确的操作。如果没有标定，相机的几何参数是未知的，或不精确的。我们拍摄了一张照片，却无法用照片来做我们想做的事：我们的计算机不知道如何处理它来去除畸变，不知道如何测量图像中某物体的真正尺寸，等等。我们可以用等式来ji近似描述这个过程，这里x是输入，y是输出，a是相机的几何参数。那么，相机标定的思路，就是“利用多组(x,y)对，建立一个方程组，来求取这组未知量a”。 相机的光学成像，是一个将三维世界转换成二维图像的过程。因此我们将三维世界物体表面点的坐标作为输入，二维图像作为输出，来估算出一个可描述相机真实状态的“数学模型”。计算机利用这个相机模型，就可以进行特定的精确操作。 相机成像模型\r众所周知，一般的相机由一组透镜和感光元件组成，利用透镜成像原理在感光元件上捕获图像。但相机的透镜成像模型较为复杂，涉及到透镜的形状、曲率、畸变等复杂光学性质，这给我们利用三维场景与二维照片来求取相机模型参数带来了困难。不过，我们在标定时关注的只是相机的投影几何关系，而可以忽略透镜的复杂光学成像过程，因此，小孔成像模型通常被用来替换透镜成像模型来计算相机的参数。但小孔成像模型是一种理想化的模型，光线通过一个小孔后直线传播，不发生折射和畸变，没有能力描述相机中的透镜畸变问题。因此，为了准确模拟真实的相机（这里不考虑视场角大于195度的鱼眼相机），一般的相机标定模型包括一个小孔成像模型和径向、切向镜头畸变。 在小孔成像模型中，光线穿过小孔，在相机的另一侧投射出一个倒立的图像。这样，虚像平面位于相机前面，包含了场景的颠倒图像。那么，为了构建相机成像模型，估算相机几何参数，就需要用数学语言描述小孔成像的过程，这个过程涉及到了四个坐标系。 四个坐标系\r• 世界坐标系：用户定义的三维世界的坐标系，用来描述目标物在真实世界里的位置以及相机所在的位置。原点和方向可以任意设置。 • 相机坐标系：在相机上建立的坐标系，为了从相机的角度描述物体位置而定义，作为沟通世界坐标系和图像/像素坐标系的中间一环。通常以相机的光心为坐标原点，x轴和y轴平行于图像坐标系的x轴和y轴，z轴为相机的光轴。 • 图像坐标系：为了描述成像过程中物体从相机坐标系到图像坐标系的投影投射关系而引入 ，方便进一步得到像素坐标系下的坐标。与成像平面重合，以成像平面的中心（光轴与成像平面的交点）为坐标原点，x 轴和 y轴分别平行于成像平面的两条边。 • 像素坐标系：用来描述物体成像后的像点在数字图像上（相片）的坐标，以像素个数为单位，是我们真正从相机内读取到的信息所在的坐标系。与成像平面重合，以成像平面的左上角顶点为原点，x 轴和 y 轴分别平行于图像坐标系的x轴和y轴。 接下来我们用这个四个坐标系来描述世界中物体表面的一点在相机上成像的过程，记该点的坐标： 世界坐标系：(Xw,Yw,Zw) 相机坐标系： (Xc,Yc,Zc) 图像坐标系：(x,y) 像素坐标系：(u,v) 世界坐标系到相机坐标系（相机外参）\r有了世界坐标系，我们首先知道了物体表面一点P的位置(Xw,Yw,Zw)。为了知道这一点相对于相机的空间位置，就需要做从世界坐标系到相机坐标系的刚体变换。引入齐次坐标，求取世界坐标系相对相机坐标系的旋转矩阵R和平移向量T，就可以将点转换到相机坐标系下： 矩阵我们称为相机外参。其中 R 为 3×3 的正交阵,向量 t 表示 3×1 的三维平移量。 相机坐标系到像素坐标系（相机内参）\r相机坐标系到图像坐标系 对于三维相机坐标系中的一点 Pc,其对应在成像平面上的成像点，是 Pc 与光心 O 的连线与图像平面的交点 p。又有相机焦距 f 。根据三角形相似定理可以推出相机坐标系与图像坐标的关系满足以下关系: 写成齐次坐标的矩阵形式： 图像坐标系到像素坐标系 图像坐标系下的坐标，依然是以“米”为单位的连续量。与它不同，像素坐标系以一个像素(pixel)为单位，原点在图像的左上方，u轴向右，v轴向下。假设是相机光心（图像坐标系原点）对应的像素坐标，某个像素点p坐标为(u,v)，dx和dy表示图像中每个像素在成像平面中的物理尺寸。则像素坐标系与成像平面坐标系之间有如下转换公式： 综合上述公式，就得到了从世界坐标系到像素坐标系的转换公式： 其中fx = f/dx,fy = f/dy。记 \u200b 那么这里矩阵M表示从世界坐标系到像素坐标系的投影映射，一般称为相机矩阵(Camera Matrix)。K就是相机内部矩阵，K中的参数就是相机内参(Intrinsic Parameters)，RT称作相机外部矩阵，它本身也就是相机外参(Extrinsic Parameters)。 小孔相机参数的物理意义\r经过上面的推导，我们就可以知道相机内外参的物理意义了。">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#自己的定义">自己的定义</a></li>
+    <li><a href="#相机标定的通俗解释">相机标定的通俗解释</a></li>
+    <li><a href="#相机成像模型">相机成像模型</a></li>
+    <li><a href="#四个坐标系">四个坐标系</a></li>
+    <li><a href="#世界坐标系到相机坐标系相机外参">世界坐标系到相机坐标系（相机外参）</a></li>
+    <li><a href="#相机坐标系到像素坐标系相机内参">相机坐标系到像素坐标系（相机内参）</a></li>
+    <li><a href="#小孔相机参数的物理意义">小孔相机参数的物理意义</a></li>
+    <li><a href="#相机坐标系归一化">相机坐标系归一化</a></li>
+    <li><a href="#镜头畸变">镜头畸变</a></li>
+    <li><a href="#非线性成像模型">非线性成像模型</a></li>
+    <li><a href="#相机标定流程">相机标定流程</a></li>
+    <li><a href="#问题与解答">问题与解答</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/" >
+                相机标定
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/">相机标定原理概述</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Aug 05, 2023</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="自己的定义">自己的定义
+</h2><p><strong>几何相机标定</strong>（Geometric Camera Calibration），简称<strong>相机标定</strong>（Camera Calibration），在英文中也称**“Camera Resectioning”，是一个根据给定的照片或视频，计算估计出相机模型的几何参数的过程。**这些几何参数描述了物体从三维世界到成像平面上各坐标点的对应关系。在计算机视觉领域，这些标定得到的参数可以用来校正镜头失真，以世界单位测量物体的大小，或确定相机在场景中的位置等。在我们的项目中，相机标定的结果主要用于三维场景重建。</p>
+<p><img src="/images/ksohtml/wpsoaZ19i.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="相机标定的几个用处"
+	
+	
+></p>
+<h2 id="相机标定的通俗解释">相机标定的通俗解释
+</h2><p>如前文所言，相机标定是一个确定特定相机几何参数的过程，以便让相机有能力完成一些特定的精确的操作。如果没有标定，相机的几何参数是未知的，或不精确的。我们拍摄了一张照片，却无法用照片来做我们想做的事：我们的计算机不知道如何处理它来去除畸变，不知道如何测量图像中某物体的真正尺寸，等等。我们可以用等式<img src="/images/ksohtml/wpsblwy9m.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+>来ji近似描述这个过程，这里x是输入，y是输出，a是相机的几何参数。那么，相机标定的思路，就是“利用多组(x,y)对，建立一个方程组，来求取这组未知量a”。</p>
+<p>相机的光学成像，是一个将三维世界转换成二维图像的过程。因此我们将三维世界物体表面点的坐标作为输入，二维图像作为输出，来估算出一个可描述相机真实状态的“数学模型”。计算机利用这个相机模型，就可以进行特定的精确操作。</p>
+<p><img src="/images/ksohtml/wpsRBtmSj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h2 id="相机成像模型">相机成像模型
+</h2><p>众所周知，一般的相机由一组透镜和感光元件组成，利用透镜成像原理在感光元件上捕获图像。但相机的透镜成像模型较为复杂，涉及到透镜的形状、曲率、畸变等复杂光学性质，这给我们利用三维场景与二维照片来求取相机模型参数带来了困难。不过，我们在标定时关注的只是相机的投影几何关系，而可以忽略透镜的复杂光学成像过程，因此，小孔成像模型通常被用来替换透镜成像模型来计算相机的参数。但小孔成像模型是一种理想化的模型，光线通过一个小孔后直线传播，不发生折射和畸变，没有能力描述相机中的透镜畸变问题。因此，为了准确模拟真实的相机（这里不考虑视场角大于195度的鱼眼相机），一般的相机标定模型包括一个小孔成像模型和径向、切向镜头畸变。</p>
+<p><img src="/images/ksohtml/wpsWZn71i.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="小孔成像"
+	
+	
+></p>
+<p>在小孔成像模型中，光线穿过小孔，在相机的另一侧投射出一个倒立的图像。这样，虚像平面位于相机前面，包含了场景的颠倒图像。那么，为了构建相机成像模型，估算相机几何参数，就需要用数学语言描述小孔成像的过程，这个过程涉及到了四个坐标系。</p>
+<h2 id="四个坐标系">四个坐标系
+</h2><p>• 世界坐标系：用户定义的三维世界的坐标系，用来描述目标物在真实世界里的位置以及相机所在的位置。原点和方向可以任意设置。</p>
+<p>• 相机坐标系：在相机上建立的坐标系，为了从相机的角度描述物体位置而定义，作为沟通世界坐标系和图像/像素坐标系的中间一环。通常以相机的光心为坐标原点，x轴和y轴平行于图像坐标系的x轴和y轴，z轴为相机的光轴。</p>
+<p>• 图像坐标系：为了描述成像过程中物体从相机坐标系到图像坐标系的投影投射关系而引入 ，方便进一步得到像素坐标系下的坐标。与成像平面重合，以成像平面的中心（光轴与成像平面的交点）为坐标原点，x 轴和 y轴分别平行于成像平面的两条边。</p>
+<p>• 像素坐标系：用来描述物体成像后的像点在数字图像上（相片）的坐标，以像素个数为单位，是我们真正从相机内读取到的信息所在的坐标系。与成像平面重合，以成像平面的左上角顶点为原点，x 轴和 y 轴分别平行于图像坐标系的x轴和y轴。</p>
+<p><img src="/images/ksohtml/wpskmmofl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>接下来我们用这个四个坐标系来描述世界中物体表面的一点在相机上成像的过程，记该点的坐标：</p>
+<p>世界坐标系：(Xw,Yw,Zw)</p>
+<p>相机坐标系： (Xc,Yc,Zc)</p>
+<p>图像坐标系：(x,y)</p>
+<p>像素坐标系：(u,v)</p>
+<h2 id="世界坐标系到相机坐标系相机外参">世界坐标系到相机坐标系（相机外参）
+</h2><p>有了世界坐标系，我们首先知道了物体表面一点P的位置(Xw,Yw,Zw)。为了知道这一点相对于相机的空间位置，就需要做从世界坐标系到相机坐标系的刚体变换。引入齐次坐标，求取世界坐标系相对相机坐标系的旋转矩阵R和平移向量T，就可以将点转换到相机坐标系下：</p>
+<p><img src="/images/ksohtml/wpsARK9Dk.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>矩阵<img src="/images/ksohtml/wpsNzOCkm.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+>我们称为<strong>相机外参。<strong>其中 R 为 3×3 的</strong>正交</strong>阵,向量 t 表示 3×1 的三维平移量。</p>
+<h2 id="相机坐标系到像素坐标系相机内参">相机坐标系到像素坐标系（相机内参）
+</h2><ol>
+<li><strong>相机坐标系到图像坐标系</strong></li>
+</ol>
+<p>对于三维相机坐标系中的一点 Pc,其对应在成像平面上的成像点，是 Pc 与光心 O 的连线与图像平面的交点 p。又有相机焦距 f 。根据三角形相似定理可以推出相机坐标系与图像坐标的关系满足以下关系:</p>
+<p><img src="/images/ksohtml/wpseSX9ek.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>写成齐次坐标的矩阵形式：</p>
+<p><img src="/images/ksohtml/wps0LGq7m.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p><img src="/images/ksohtml/wpsXa3Umm.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<ol start="2">
+<li><strong>图像坐标系到像素坐标系</strong></li>
+</ol>
+<p>图像坐标系下的坐标，依然是以“米”为单位的连续量。与它不同，像素坐标系以一个像素(pixel)为单位，原点在图像的左上方，u轴向右，v轴向下。假设<img src="/images/ksohtml/wpstECcTi.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+>是相机光心（图像坐标系原点）对应的像素坐标，某个像素点p坐标为(u,v)，dx和dy表示图像中每个像素在成像平面中的物理尺寸。则像素坐标系与成像平面坐标系之间有如下转换公式：</p>
+<p><img src="/images/ksohtml/wpsbm9YZi.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p><img src="/images/ksohtml/wpss5pINl.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>综合上述公式，就得到了从世界坐标系到像素坐标系的转换公式：</p>
+<p><img src="/images/ksohtml/wpsxPi9bl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>其中fx = f/dx,fy = f/dy。记</p>
+<p>​                     <img src="/images/ksohtml/wps3dngdl.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>那么这里矩阵M表示从世界坐标系到像素坐标系的投影映射，一般称为<strong>相机矩阵</strong>(Camera Matrix)。K就是<strong>相机内部矩阵</strong>，K中的参数就是<strong>相机内参</strong>(Intrinsic Parameters)，RT称作<strong>相机外部矩阵，<strong>它本身也就是</strong>相机外参</strong>(Extrinsic Parameters)<strong>。</strong></p>
+<h2 id="小孔相机参数的物理意义">小孔相机参数的物理意义
+</h2><p>经过上面的推导，我们就可以知道相机内外参的物理意义了。</p>
+<p>对于内参K，有更一般的形式</p>
+<p><img src="/images/ksohtml/wpsFpbMkk.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>其中fx = f/dx,fy = f/dy，f是物理世界下的相机焦距，dx与dy是图像中每个像素在成像平面中的物理尺寸，那么fx，fy就是相机以像素为单位在两个方向上的焦距。u0和v0代表相机光心（图像坐标系原点）的像素坐标。这里的γ是像素倾斜系数，一般情况为0。当γ不为零时，表示相机感光片上像素的排列方向没有垂直，有：</p>
+<p><img src="/images/ksohtml/wpsla7PGl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>则<img src="/images/ksohtml/wpsHKQ0Oj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+>。推导过程略。</p>
+<p>对于外参RT，则直接代表了相机坐标系与世界坐标系之间关系。旋转矩阵R表示世界坐标系在相机坐标系下的姿态，平移矩阵T代表世界坐标系原点在相机坐标系下的位置。根据旋转矩阵的性质，可知相机在世界坐标系中的位置为</p>
+<p><img src="/images/ksohtml/wpslBiLsk.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h2 id="相机坐标系归一化">相机坐标系归一化
+</h2><p>在将世界坐标点转换到相机坐标系后，再除掉它最后一个维度的数值（Z值，表示该点距离相机成像平面的深度）。这一归一化操作，得到了相机坐标系下的点P在相机归一化平面中的投影：</p>
+<p><img src="/images/ksohtml/wpsA0dyYk.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>这个归一化坐标可以看成是相机前方z=1处平面（相机归一化平面）上的一个点。在相机的视角上，归一化后的点的位置与原本的P点位置没有区别。因此我们可以拿归一化坐标(X&rsquo;,Y&rsquo;,1)做与像素坐标系的转换：</p>
+<p><img src="/images/ksohtml/wpsFu0ykj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>这个变换背后的物理意义是，在世界坐标系中的点投射在成像平面上时，点的深度信息在投影过程中丢失了，单目视觉中无法得到像素点的深度值，简单来说，就是信息维度的减少。</p>
+<p>这样，我们就成功将小孔相机成像的几何过程，通过一组线性模型来拟合出来了：只要知道相机的内外参（相机像素焦距、相机中心点像素位置、相机在场景中的位置和姿态），就可以根据一个点在世界中的位置，计算出它在相机的像素位置。</p>
+<h2 id="镜头畸变">镜头畸变
+</h2><p>理想的透镜是没有畸变的。但是，因为制造和安装精度等方面的原因，镜头总是存在这畸变。畸变是相机固有特性，同款相机的畸变也会有些许差异。因此，广义上的相机内参，除了包含上述的K矩阵外，还包含相机镜头的<strong>畸变系数</strong>。镜头畸变分为<strong>径向畸变</strong>（Radial Distortion）和<strong>切向畸变</strong>（Tangential Distortion）。径向畸变来源于相机透镜在制造过程中的误差,而切向畸变则来源于整个相机的组装误差。</p>
+<ol>
+<li><strong>径向畸变</strong></li>
+</ol>
+<p>径向畸变来自透镜形状不规则以及建模的方式，导致镜头不同部分焦距不同。光线在透镜边缘的弯曲程度和在透镜中心的弯曲程度不同，导致了畸变的发生。在到达图像传感器之前，光线从其理想位置径向向内移动，造成枕型畸变，或径向向外移动，造成桶形畸变。</p>
+<p><img src="/images/ksohtml/wpsx3XDKj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>相机光轴中心的畸变为0，沿着镜头半径方向向边缘移动，畸变越来越严重。畸变的数学模型可以用主点（principle point）周围的泰勒级数展开式的前几项进行描述，通常使用前两项，即k1和k2，对于畸变很大的镜头，如鱼眼镜头，可以增加使用第三项k3来进行描述，图像上某点根据其在径向方向上的分布位置，消除径向畸变的调节公式为：</p>
+<p><img src="/images/ksohtml/wpsgkKJEl.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>其中(x,y)表示归一化后的相机坐标系中的一点，k1、k2和k3即为透镜的径向畸变系数。等式左边是去畸变后的坐标。</p>
+<ol start="2">
+<li><strong>切向畸变</strong></li>
+</ol>
+<p>切向畸变来自于整个摄像机的组装过程。由于透镜制造上的缺陷使得透镜本身与图像平面不平行而产生的，如下图所示：</p>
+<p><img src="/images/ksohtml/wpse01Akj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>切向畸变可以用两个参数p1和p2来描述：</p>
+<p><img src="/images/ksohtml/wpsXMbXxl.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>与径向畸变情况相同，这里(x,y)表示归一化后的相机坐标系中的一点，p1、p2为透镜的切向畸变系数。等式左边是去畸变后的坐标。</p>
+<p>径向畸变与切向畸变共同作用在位于归一化的相机坐标系上的点，就有：</p>
+<p><img src="/images/ksohtml/wpsA7dlzj.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>等式左边是去畸变后的x坐标，y坐标道理相同。因此，对于相机镜头的畸变模型，通常使用5个畸变系数<img src="/images/ksohtml/wpsLEevGk.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+>来进行描述。</p>
+<p>根据这两种畸变模型，我们也应该注意到，对于一个相机，它的图像的某一点上的畸变系数，是不随点的位置变化而变化的。只利用相机图像的一部分区域得到的畸变系数，在图像的所有位置上都适用。</p>
+<h2 id="非线性成像模型">非线性成像模型
+</h2><p>小孔成像模型是线性的，只要相机拍摄多张照片，找到真实世界中的多个点的位置与他们在图像中对应的像素点的位置，理论上就可以求出精度很高的相机参数。但也仅仅是理论上，因为真实的成像过程，但在小孔成像模型外引入的畸变模型是非线性的，在只知道世界坐标点和它们在图像中畸变后的位置，是无法通过解析法直接求取参数的。这就是为什么前文提到，我们无法准确求取相机参数，只能想办法“估算”一个数学模型，来“逼近”相机真实的成像过程。</p>
+<p><img src="/images/ksohtml/wpssItY2m.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h2 id="相机标定流程">相机标定流程
+</h2><p>到目前为止，单目相机的数学模型已经建立起来了。</p>
+<p>对于一个已经组装好的相机镜头，它的内参和畸变系数是确定的，不变的。但它的外参，会随着相机与实际场景中参照物的相对位置的变化而变化。因此，为了满足MetaSense项目或其他项目，对我们自研的双目相机的单个镜头的内外参与畸变系数的使用要求，我们需要在两个不同的时间和地点完成相机的标定，得到相机单个镜头的内外参和畸变系数，以及双目镜头之间的其他参数（详见双目相机标定，有待完善）。</p>
+<ol>
+<li>在相机组装完成，具备了镜头视频流推送的功能后，对相机进行内参标定，获取每个镜头的内参、畸变系数，与双目镜头之间的其他参数。这些数据会被保存。</li>
+<li>当相机被固定在特定的使用场景中之后，在确保相机位置不会轻易改变后，利用相机在出厂前标定的内参，进行外参标定，也就是获得每个相机在场景中的位置。</li>
+</ol>
+<h2 id="问题与解答">问题与解答
+</h2><ol>
+<li>相机分辨率改变时，参数如何变化？</li>
+<li>当多相机的外参整体出现偏倚时，如何补救？</li>
+<li>有哪些用途的相机需要进行标定？</li>
+<li>拍摄标定照片时，照片的拍摄方式如何确定？</li>
+<li>在跨场景外参标定时，如何保证参数的传递？</li>
+</ol>
+<p><strong>参考资料</strong></p>
+<p>• Z. Zhang, <a class="link" href="http://research.microsoft.com/en-us/um/people/zhang/Papers/TR98-71.pdf"  target="_blank" rel="noopener"
+    >&ldquo;A flexible new technique for camera calibration&rsquo;&rdquo;</a>, IEEE Transactions on Pattern Analysis and Machine Intelligence, Vol.22, No.11, pages 1330–1334, 2000</p>
+<p>• <a class="link" href="https://en.wikipedia.org/wiki/Camera_resectioning"  target="_blank" rel="noopener"
+    >https://en.wikipedia.org/wiki/Camera_resectioning</a></p>
+<p>• <a class="link" href="https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html"  target="_blank" rel="noopener"
+    >https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html</a></p>
+<p>• <a class="link" href="https://ww2.mathworks.cn/help/vision/ug/camera-calibration.html"  target="_blank" rel="noopener"
+    >https://ww2.mathworks.cn/help/vision/ug/camera-calibration.html</a></p>
+<p>• <a class="link" href="https://www.analyticsvidhya.com/blog/2021/10/a-comprehensive-guide-for-camera-calibration-in-computer-vision/"  target="_blank" rel="noopener"
+    >https://www.analyticsvidhya.com/blog/2021/10/a-comprehensive-guide-for-camera-calibration-in-computer-vision/</a></p>
+<p>• <a class="link" href="https://zhuanlan.zhihu.com/p/583883569"  target="_blank" rel="noopener"
+    >https://zhuanlan.zhihu.com/p/583883569</a></p>
+<p>• <a class="link" href="https://zhuanlan.zhihu.com/p/52322904"  target="_blank" rel="noopener"
+    >https://zhuanlan.zhihu.com/p/52322904</a></p>
+<p>• <a class="link" href="https://www.cnblogs.com/yutian-blogs/p/13543481.html"  target="_blank" rel="noopener"
+    >https://www.cnblogs.com/yutian-blogs/p/13543481.html</a></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">一次多相机外参标定异常结果问题排查过程</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">多相机外参问题思考</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%8F%8C%E7%9B%AE%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">双目相机标定</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%8D%95%E7%9B%AE%E7%9B%B8%E6%9C%BA%E5%86%85%E5%8F%82%E6%A0%87%E5%AE%9A/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">单目相机内参标定</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

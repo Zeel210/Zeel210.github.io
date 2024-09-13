@@ -2,11 +2,34 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>Posts on 潦草小驴</title>
-        <link>https://zeel210.github.io/posts/</link>
+        <link>http://localhost:1313/posts/</link>
         <description>Recent content in Posts on 潦草小驴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
         <copyright>潦草小驴</copyright>
-        <lastBuildDate>Tue, 18 Jun 2024 23:59:41 +0800</lastBuildDate><atom:link href="https://zeel210.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+        <lastBuildDate>Sat, 03 Aug 2024 21:44:55 +0800</lastBuildDate><atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>C&#43;&#43;面经</title>
+        <link>http://localhost:1313/posts/c&#43;&#43;%E9%9D%A2%E7%BB%8F/</link>
+        <pubDate>Sat, 03 Aug 2024 21:44:55 +0800</pubDate>
+        
+        <guid>http://localhost:1313/posts/c&#43;&#43;%E9%9D%A2%E7%BB%8F/</guid>
+        <description>&lt;h1 id=&#34;c面经&#34;&gt;C++面经
+&lt;/h1&gt;&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;#include &amp;lt;xxx.h&amp;gt; 和 #include &amp;ldquo;xxx.h&amp;quot;有什么区别&lt;/p&gt;
+&lt;p&gt;#include &amp;lt;xxx.h&amp;gt; 用于标准库头文件：通常用于包含标准库的头文件。 搜索路径：编译器首先在标准库的目录中查找文件。这些目录通常是编译器安装时配置的目录。例如，在C++中，#include &lt;iostream&gt; 会让编译器在其标准库路径中寻找 iostream 头文件。 意图：这种形式表明你正在包含一个通用的、标准的或第三方库中的头文件。 #include &amp;ldquo;xxx.h&amp;rdquo; 用于项目中的头文件：通常用于包含用户定义的头文件，即你在项目中创建的头文件。 搜索路径： 编译器首先在当前源文件所在的目录查找文件。 如果在当前目录中找不到，编译器会在指定的包含路径中搜索（例如，使用 -I 选项指定的目录）。 最后，编译器可能会在标准库目录中查找，但这是实现定义的。 意图：这种形式表明你正在包含一个与当前项目更紧密相关的头文件，通常是你自己编写的头文件。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
+        <title>Blog_Building</title>
+        <link>http://localhost:1313/posts/blog_building/</link>
+        <pubDate>Tue, 18 Jun 2024 23:59:41 +0800</pubDate>
+        
+        <guid>http://localhost:1313/posts/blog_building/</guid>
+        <description></description>
+        </item>
+        
     </channel>
 </rss>

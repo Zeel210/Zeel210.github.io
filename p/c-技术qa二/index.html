@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="C++技术Q&amp;A（二）\r多线程里面的promise和future，以及和atomic的差别，锁 std::move 用于实现移动语义。将对象的所有权从一个对象转移到另一个对象，从而避免不必要的复制，提高程序性能。 std::move的主要作用是将一个左值强制转换为右值引用，从而使得该对象能够参与移动语义。例如，当你不再需要使用某个对象时，可以用std::move将它转换为右值引用，以便资源被高效地“移动”到新对象中，而不是“复制”。 使用std::move后，原对象不再有效。 左值和右值拷贝 左值（lvalue）和右值（rvalue）是表达式的两种基本类型。 左值是一个表达式，表示内存中的一个对象，可以获取该对象的地址。左值通常是变量、对象的成员、或者返回左值引用的函数调用。 右值：通常是表达式的结果、常量、或者临时对象。它表示临时值或字面量。生命周期短，只能出现在赋值操作的右边。 右值引用“&amp;&amp;”：允许我们操作即将被销毁的对象，从而实现移动语义。 左值拷贝：当你将一个对象赋值给另一个对象时，如果被赋值的对象是左值（持久存在），通常会发生拷贝操作。这意味着所有权不会转移，源对象和目标对象都有独立的内存。 1 2 std::string s1 = &#34;Hello&#34;; std::string s2 = s1; // s1 是左值，发生深拷贝 右值引用：当你通过右值引用将临时对象赋值给另一个对象时，移动语义可能会被触发，资源将被移动而不是拷贝。这提高了性能，因为避免了不必要的内存分配和复制。 1 std::string s3 = std::move(s1); // s1 是左值，通过 std::move 转换为右值，触发移动语义 构造函数和析构函数里面能不能是虚函数 构造函数不能是虚函数。在基类构造函数执行时，派生类的虚函数表还未初始化完毕。因此，无法在构造函数中正确调用派生类的虚函数版本。 this指针能不能删除 this指针：在一个对象上调用成员函数时，该函数会自动接收一个指向该对象的指针，这个指针就是this指针。this指针指向调用该成员函数的对象的内存地址，使得函数能够访问该对象的成员变量和其他成员函数。确保了函数可以正确地访问和操作属于当前对象的成员变量。 this指针不能被直接删除或修改，它是由编译器管理的指向当前对象的指针。 虽然可以通过delete this来销毁对象，但这种操作非常危险。 拷贝构造，unique_ptr为什么不能拷贝构造 拷贝构造函数允许你创建一个新的对象，并将现有对象的内容复制到新对象中。 std::unique_ptr 不允许多个指针同时拥有相同的资源，从而避免了潜在的双重释放和悬空指针问题。 虽然 std::unique_ptr 不支持拷贝构造，但它支持移动构造和移动赋值，能通过 std::move 转移所有权。 std::unique_ptr ptr2 = std::move(ptr1); 什么情况下拷贝构造函数设成private 独立资源的管理 单例模式 禁止复制的对象 struct和class的区别 struct 中的成员（包括数据成员和成员函数）是 公有（public） 的。class相反，默认都是私有。 他们的继承默认方式同上。 struct 更倾向于用来定义数据结构。class 更倾向于用来定义对象和行为 在迭代器的循环中，为什么不能调用erase函数">
+<title>C&#43;&#43;技术Q&amp;A（二）</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/c-%E6%8A%80%E6%9C%AFqa%E4%BA%8C/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="C++技术Q&A（二）">
+<meta property='og:description' content="C++技术Q&amp;A（二）\r多线程里面的promise和future，以及和atomic的差别，锁 std::move 用于实现移动语义。将对象的所有权从一个对象转移到另一个对象，从而避免不必要的复制，提高程序性能。 std::move的主要作用是将一个左值强制转换为右值引用，从而使得该对象能够参与移动语义。例如，当你不再需要使用某个对象时，可以用std::move将它转换为右值引用，以便资源被高效地“移动”到新对象中，而不是“复制”。 使用std::move后，原对象不再有效。 左值和右值拷贝 左值（lvalue）和右值（rvalue）是表达式的两种基本类型。 左值是一个表达式，表示内存中的一个对象，可以获取该对象的地址。左值通常是变量、对象的成员、或者返回左值引用的函数调用。 右值：通常是表达式的结果、常量、或者临时对象。它表示临时值或字面量。生命周期短，只能出现在赋值操作的右边。 右值引用“&amp;&amp;”：允许我们操作即将被销毁的对象，从而实现移动语义。 左值拷贝：当你将一个对象赋值给另一个对象时，如果被赋值的对象是左值（持久存在），通常会发生拷贝操作。这意味着所有权不会转移，源对象和目标对象都有独立的内存。 1 2 std::string s1 = &#34;Hello&#34;; std::string s2 = s1; // s1 是左值，发生深拷贝 右值引用：当你通过右值引用将临时对象赋值给另一个对象时，移动语义可能会被触发，资源将被移动而不是拷贝。这提高了性能，因为避免了不必要的内存分配和复制。 1 std::string s3 = std::move(s1); // s1 是左值，通过 std::move 转换为右值，触发移动语义 构造函数和析构函数里面能不能是虚函数 构造函数不能是虚函数。在基类构造函数执行时，派生类的虚函数表还未初始化完毕。因此，无法在构造函数中正确调用派生类的虚函数版本。 this指针能不能删除 this指针：在一个对象上调用成员函数时，该函数会自动接收一个指向该对象的指针，这个指针就是this指针。this指针指向调用该成员函数的对象的内存地址，使得函数能够访问该对象的成员变量和其他成员函数。确保了函数可以正确地访问和操作属于当前对象的成员变量。 this指针不能被直接删除或修改，它是由编译器管理的指向当前对象的指针。 虽然可以通过delete this来销毁对象，但这种操作非常危险。 拷贝构造，unique_ptr为什么不能拷贝构造 拷贝构造函数允许你创建一个新的对象，并将现有对象的内容复制到新对象中。 std::unique_ptr 不允许多个指针同时拥有相同的资源，从而避免了潜在的双重释放和悬空指针问题。 虽然 std::unique_ptr 不支持拷贝构造，但它支持移动构造和移动赋值，能通过 std::move 转移所有权。 std::unique_ptr ptr2 = std::move(ptr1); 什么情况下拷贝构造函数设成private 独立资源的管理 单例模式 禁止复制的对象 struct和class的区别 struct 中的成员（包括数据成员和成员函数）是 公有（public） 的。class相反，默认都是私有。 他们的继承默认方式同上。 struct 更倾向于用来定义数据结构。class 更倾向于用来定义对象和行为 在迭代器的循环中，为什么不能调用erase函数">
+<meta property='og:url' content='https://zeel210.github.io/p/c-%E6%8A%80%E6%9C%AFqa%E4%BA%8C/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='备忘笔记' /><meta property='article:tag' content='c&#43;&#43;' /><meta property='article:published_time' content='2024-08-14T21:46:21&#43;08:00'/><meta property='article:modified_time' content='2024-08-14T21:46:21&#43;08:00'/>
+<meta name="twitter:title" content="C++技术Q&A（二）">
+<meta name="twitter:description" content="C++技术Q&amp;A（二）\r多线程里面的promise和future，以及和atomic的差别，锁 std::move 用于实现移动语义。将对象的所有权从一个对象转移到另一个对象，从而避免不必要的复制，提高程序性能。 std::move的主要作用是将一个左值强制转换为右值引用，从而使得该对象能够参与移动语义。例如，当你不再需要使用某个对象时，可以用std::move将它转换为右值引用，以便资源被高效地“移动”到新对象中，而不是“复制”。 使用std::move后，原对象不再有效。 左值和右值拷贝 左值（lvalue）和右值（rvalue）是表达式的两种基本类型。 左值是一个表达式，表示内存中的一个对象，可以获取该对象的地址。左值通常是变量、对象的成员、或者返回左值引用的函数调用。 右值：通常是表达式的结果、常量、或者临时对象。它表示临时值或字面量。生命周期短，只能出现在赋值操作的右边。 右值引用“&amp;&amp;”：允许我们操作即将被销毁的对象，从而实现移动语义。 左值拷贝：当你将一个对象赋值给另一个对象时，如果被赋值的对象是左值（持久存在），通常会发生拷贝操作。这意味着所有权不会转移，源对象和目标对象都有独立的内存。 1 2 std::string s1 = &#34;Hello&#34;; std::string s2 = s1; // s1 是左值，发生深拷贝 右值引用：当你通过右值引用将临时对象赋值给另一个对象时，移动语义可能会被触发，资源将被移动而不是拷贝。这提高了性能，因为避免了不必要的内存分配和复制。 1 std::string s3 = std::move(s1); // s1 是左值，通过 std::move 转换为右值，触发移动语义 构造函数和析构函数里面能不能是虚函数 构造函数不能是虚函数。在基类构造函数执行时，派生类的虚函数表还未初始化完毕。因此，无法在构造函数中正确调用派生类的虚函数版本。 this指针能不能删除 this指针：在一个对象上调用成员函数时，该函数会自动接收一个指向该对象的指针，这个指针就是this指针。this指针指向调用该成员函数的对象的内存地址，使得函数能够访问该对象的成员变量和其他成员函数。确保了函数可以正确地访问和操作属于当前对象的成员变量。 this指针不能被直接删除或修改，它是由编译器管理的指向当前对象的指针。 虽然可以通过delete this来销毁对象，但这种操作非常危险。 拷贝构造，unique_ptr为什么不能拷贝构造 拷贝构造函数允许你创建一个新的对象，并将现有对象的内容复制到新对象中。 std::unique_ptr 不允许多个指针同时拥有相同的资源，从而避免了潜在的双重释放和悬空指针问题。 虽然 std::unique_ptr 不支持拷贝构造，但它支持移动构造和移动赋值，能通过 std::move 转移所有权。 std::unique_ptr ptr2 = std::move(ptr1); 什么情况下拷贝构造函数设成private 独立资源的管理 单例模式 禁止复制的对象 struct和class的区别 struct 中的成员（包括数据成员和成员函数）是 公有（public） 的。class相反，默认都是私有。 他们的继承默认方式同上。 struct 更倾向于用来定义数据结构。class 更倾向于用来定义对象和行为 在迭代器的循环中，为什么不能调用erase函数">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#c技术qa二">C++技术Q&amp;A（二）</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/c&#43;&#43;/" >
+                C&#43;&#43;
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/c-%E6%8A%80%E6%9C%AFqa%E4%BA%8C/">C&#43;&#43;技术Q&amp;A（二）</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Aug 14, 2024</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="c技术qa二">C++技术Q&amp;A（二）
+</h2><ol>
+<li>
+<p>多线程里面的promise和future，以及和atomic的差别，锁</p>
+</li>
+<li>
+<p>std::move</p>
+<p>用于实现<strong>移动语义</strong>。将对象的所有权从一个对象转移到另一个对象，从而避免不必要的复制，提高程序性能。</p>
+<p>std::move的主要作用是将一个左值强制转换为右值引用，从而使得该对象能够参与移动语义。例如，当你不再需要使用某个对象时，可以用std::move将它转换为右值引用，以便资源被高效地“移动”到新对象中，而不是“复制”。</p>
+<p>使用std::move后，原对象不再有效。</p>
+</li>
+<li>
+<p>左值和右值拷贝</p>
+<ol>
+<li>
+<p>左值（lvalue）和右值（rvalue）是表达式的两种<strong>基本类型</strong>。</p>
+</li>
+<li>
+<p>左值是一个表达式，表示内存中的一个对象，<strong>可以获取该对象的地址</strong>。左值通常是变量、对象的成员、或者返回左值引用的函数调用。</p>
+</li>
+<li>
+<p>右值：通常是表达式的结果、常量、或者临时对象。<strong>它表示临时值或字面量</strong>。生命周期短，只能出现在赋值操作的右边。</p>
+</li>
+<li>
+<p>右值引用“&amp;&amp;”：允许我们操作即将被销毁的对象，从而实现<strong>移动语义</strong>。</p>
+</li>
+<li>
+<p><strong>左值拷贝</strong>：当你将一个对象赋值给另一个对象时，如果被赋值的对象是左值（持久存在），通常会发生拷贝操作。这意味着所有权不会转移，源对象和目标对象都有独立的内存。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s1</span> <span class="o">=</span> <span class="s">&#34;Hello&#34;</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">s1</span><span class="p">;</span>  <span class="c1">// s1 是左值，发生深拷贝
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>右值引用</strong>：当你通过右值引用将临时对象赋值给另一个对象时，移动语义可能会被触发，资源将被移动而不是拷贝。这提高了性能，因为避免了不必要的内存分配和复制。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s3</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s1</span><span class="p">);</span> <span class="c1">// s1 是左值，通过 std::move 转换为右值，触发移动语义
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ol>
+</li>
+<li>
+<p>构造函数和析构函数里面能不能是虚函数</p>
+<ol>
+<li>构造函数不能是虚函数。在基类构造函数执行时，派生类的虚函数表还未初始化完毕。因此，无法在构造函数中正确调用派生类的虚函数版本。</li>
+<li></li>
+</ol>
+</li>
+<li>
+<p>this指针能不能删除</p>
+<ol>
+<li>this指针：在一个对象上调用成员函数时，该函数会自动接收一个指向该对象的指针，这个指针就是this指针。this指针指向调用该成员函数的对象的内存地址，使得函数能够访问该对象的成员变量和其他成员函数。<strong>确保了函数可以正确地访问和操作属于当前对象的成员变量。</strong></li>
+<li>this指针不能被直接删除或修改，它是由编译器管理的指向当前对象的指针。</li>
+<li>虽然可以通过delete this来销毁对象，但这种操作非常危险。</li>
+</ol>
+</li>
+<li>
+<p>拷贝构造，unique_ptr为什么不能拷贝构造</p>
+<ol>
+<li>拷贝构造函数允许你创建一个新的对象，并将现有对象的内容复制到新对象中。</li>
+<li>std::unique_ptr 不允许多个指针同时拥有相同的资源，从而避免了潜在的双重释放和悬空指针问题。</li>
+<li>虽然 std::unique_ptr 不支持拷贝构造，但它支持移动构造和移动赋值，能通过 std::move 转移所有权。
+<ol>
+<li>std::unique_ptr<int> ptr2 = std::move(ptr1);</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<p>什么情况下拷贝构造函数设成private</p>
+<ol>
+<li>独立资源的管理</li>
+<li>单例模式</li>
+<li>禁止复制的对象</li>
+</ol>
+</li>
+<li>
+<p>struct和class的区别</p>
+<ol>
+<li>struct 中的成员（包括数据成员和成员函数）是 公有（public） 的。class相反，默认都是私有。</li>
+<li>他们的继承默认方式同上。</li>
+<li>struct 更倾向于用来定义数据结构。class 更倾向于用来定义对象和行为</li>
+</ol>
+</li>
+<li>
+<p>在迭代器的循环中，为什么不能调用erase函数</p>
+<ol>
+<li>
+<p>当你从容器中删除一个元素时，指向该元素的迭代器会失效。对于一些容器，删除某个元素后，该元素之后的所有迭代器也可能会失效。</p>
+</li>
+<li>
+<p>解决方案：使用 erase 返回的迭代器来更新循环中的迭代器，确保迭代器始终有效。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">};</span> 
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">vec</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="p">)</span> <span class="p">{</span>     
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">it</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>         
+</span></span><span class="line"><span class="cl">        <span class="n">it</span> <span class="o">=</span> <span class="n">vec</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span>  <span class="c1">// 使用erase返回的有效迭代器     
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>         
+</span></span><span class="line"><span class="cl">        <span class="o">++</span><span class="n">it</span><span class="p">;</span>  <span class="c1">// 仅在没有删除元素时递增迭代器     
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ol>
+</li>
+<li>
+<p>讲讲虚函数、虚表、虚指针</p>
+<ol>
+<li>当一个类中包含虚函数时，编译器会在对象中插入一个<strong>指向虚表的指针</strong>（即虚表指针 vptr），而虚表则保存了这个类的所有虚函数的地址。</li>
+<li>虚表中的每个元素对应类的一个虚函数，存储的是该函数的地址。</li>
+<li>如果类继承了基类并重写了基类的虚函数，派生类的虚表中对应项会指向派生类的重写版本。当类派生出子类时，如果子类重写了基类的虚函数，子类的虚表中的相应指针会被更新为指向子类的函数。</li>
+<li>虚函数调用过程：
+<ol>
+<li>通过对象的 vptr 找到对应的虚表。</li>
+<li>根据虚函数在类中声明的顺序，从虚表中找到对应的函数指针。</li>
+<li>调用虚表中对应的函数指针，执行派生类中的虚函数实现。</li>
+</ol>
+</li>
+<li>虚表指针是在对象构造时初始化的。</li>
+</ol>
+</li>
+<li>
+<p>基类的析构函数为什么要定义成虚函数</p>
+<ol>
+<li>如果基类的析构函数不是虚函数，当我们通过基类指针删除派生类对象时，只会调用基类的析构函数，而不会调用派生类的析构函数。这可能导致派生类中的资源（如动态分配的内存、文件句柄等）无法被正确释放，造成资源泄漏。</li>
+</ol>
+</li>
+<li>
+<p>四种类型转换运算符</p>
+<ol>
+<li>分别是static_cast、dynamic_cast、const_cast和reinterpret_cast</li>
+<li>static_cast 是一种用于执行常规类型转换的运算符。</li>
+<li>dynamic_cast 主要用于在多态情况下进行类型转换。多态类型的指针或引用的转换：用于从基类向派生类的安全转换，确保转换是有效的。如果转换无效，指针类型会返回 nullptr。dynamic_cast 只能用于包含虚函数的类，即具有多态性。如果类中没有虚函数，dynamic_cast 将无法使用。</li>
+<li>const_cast 用于在类型转换中添加或移除 const 或 volatile 修饰符。它是唯一可以修改常量性的类型转换运算符。</li>
+<li>reinterpret_cast 用于进行几乎任意的类型转换。这种转换是非常底层的，它不会考虑类型的实际含义。很危险。</li>
+</ol>
+</li>
+<li>
+<p>c++内存</p>
+<p>他们通常被分成几个区域。</p>
+<ol>
+<li>静态/全局内存区（Static/Global Memory Area）
+<ol>
+<li>存放内容：存储全局变量、静态变量（static）、常量（const）以及一些特殊变量。</li>
+<li>生命周期：这些变量在程序启动时分配，并在程序结束时销毁，生命周期贯穿整个程序运行期。</li>
+</ol>
+</li>
+<li>栈区（Stack Area）
+<ol>
+<li>存放内容：存储局部变量和函数调用时的参数以及返回地址。每次函数调用都会在栈中创建一个新的栈帧，用于保存该函数的局部变量、参数和返回地址。</li>
+<li>生命周期：局部变量的生命周期与其所在的函数调用相关，当函数结束时，这些变量被自动销毁。</li>
+</ol>
+</li>
+<li>堆区（Heap Area）
+<ol>
+<li>存放内容：通过动态内存分配（如 new、malloc）分配的内存块。</li>
+<li>生命周期：由程序员显式管理，必须显式释放（如 delete、free），否则可能导致内存泄漏。</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<p>智能指针有哪些，分别如何使用</p>
+<ol>
+<li>
+<p>std::shared_ptr是一个共享所有权的智能指针，多个std::shared_ptr可以指向同一对象，并且通过引用计数管理资源。当最后一个std::shared_ptr离开作用域时，资源才会被释放。</p>
+<p>​	使用场景：当需要多个所有者共同管理一个对象的生命周期时。 适用于需要共享对象但无法明确确定对象生命周期的场景，例如观察者模式。</p>
+</li>
+<li>
+<p>std::unique_ptr在第20条说过。</p>
+</li>
+<li>
+<p>std::weak_ptr：用于观察std::shared_ptr所管理的资源，避免循环引用，不影响引用计数。</p>
+</li>
+</ol>
+<p>使用智能指针可以显著减少内存管理错误，提高代码的安全性和可维护性。</p>
+</li>
+<li>
+<p>STL</p>
+<ol>
+<li>容器（Containers）</li>
+<li>迭代器</li>
+<li>算法
+<ol>
+<li>非变更算法（Non-modifying Algorithms）：不改变容器内容，只读操作。  std::for_each：对范围内的每个元素应用操作。 std::find：在范围内查找指定元素。 std::count：计算指定元素的出现次数。</li>
+<li>变更算法（Modifying Algorithms）：会修改容器内容。  std::copy：将元素复制到另一个范围。 std::transform：对每个元素应用操作并存储结果。 std::fill：用指定值填充范围。</li>
+<li>排序算法（Sorting Algorithms）：用于排序和排列元素。  std::sort：对范围内的元素进行升序排序。 std::reverse：反转范围内的元素顺序。 std::shuffle：随机打乱范围内的元素顺序。</li>
+<li>数值算法（Numeric Algorithms）：用于数值计算。  std::accumulate：计算范围内元素的累积和。 std::inner_product：计算内积。 std::partial_sum：计算部分和。</li>
+</ol>
+</li>
+<li>函数对象（Function Objects, Functors）</li>
+<li>适配器（Adapters）</li>
+<li>。。。。。。</li>
+</ol>
+</li>
+<li>
+<p>变量的声明和定义</p>
+<ol>
+<li>声明（Declaration）告诉编译器变量的名称和类型，但不会为变量分配内存或初始化值。声明通常用于在多个文件之间共享变量的情况。例如，如果你在一个头文件中声明一个变量，那么这个变量就可以在其他源文件中使用。</li>
+<li>定义（Definition）不仅告诉编译器变量的名称和类型，还为变量分配内存，并且可以初始化它。定义通常只出现一次，因为它负责实际创建变量。</li>
+<li><strong>extern</strong>关键字通常用于变量的声明，<strong>以表示变量定义在其他文件中</strong>。例如，在头文件中声明全局变量，在源文件中定义。</li>
+</ol>
+</li>
+<li>
+<p>extern 和 extern C有什么区别</p>
+<ol>
+<li>
+<p>extern &ldquo;C&rdquo; 是一种 C++ 语言的扩展，用于指示编译器使用 C 语言的函数命名和调用约定。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// C++ 头文件中 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="p">{</span>     
+</span></span><span class="line"><span class="cl">	<span class="kt">void</span> <span class="nf">myFunction</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>  <span class="c1">// 这会使用 C 的命名约定 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>  
+</span></span><span class="line"><span class="cl"><span class="c1">// C++ 源文件中 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="p">{</span>     
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">myFunction</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>         
+</span></span><span class="line"><span class="cl">        <span class="c1">// 函数实现     
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ol>
+</li>
+<li>
+<p>静态成员函数</p>
+<ol>
+<li>静态成员函数（Static Member Function）是属于类本身的函数，而不是某个具体对象的成员函数。</li>
+<li>特点：
+<ol>
+<li>不依赖于对象：静态成员函数不需要通过对象来调用，可以直接通过类名调用。这是因为它们属于类本身，而不是类的实例。</li>
+<li>不能访问非静态成员：由于静态成员函数不依赖于具体的对象实例，它无法访问类的非静态成员（变量或函数），因为这些非静态成员需要对象实例来访问。</li>
+<li>只能访问静态成员：静态成员函数只能访问类的静态成员变量或静态成员函数。</li>
+<li>没有this指针：因为静态成员函数不属于任何对象实例，所以在静态成员函数内部没有this指针。</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<p>从下而上，从派生类的指针转换为多重基类的某一个指针，有什么问题。</p>
+</li>
+<li>
+<p>override加与不加的区别</p>
+</li>
+<li>
+<p>一个类中的引用，会在什么时候初始化</p>
+<ol>
+<li>
+<p>该引用成员必须在类的构造函数初始化列表中进行初始化。引用在C++中是必须被绑定到一个有效的对象或变量，因此它必须在对象创建时被初始化，且在对象的生命周期内不能再改变绑定的对象或变量。</p>
+</li>
+<li>
+<p><strong>必须使用初始化列表</strong>：引用成员变量必须在构造函数的初始化列表中进行初始化，不能在构造函数体内进行初始化。这是因为引用在C++中一旦被绑定，就不能再更改绑定对象，所以它在对象创建时就必须得到初始化。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="k">class</span> <span class="nc">MyClass</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span><span class="o">&amp;</span> <span class="n">ref</span><span class="p">;</span>  <span class="c1">// 引用成员变量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 构造函数，使用初始化列表初始化引用成员
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">MyClass</span><span class="p">(</span><span class="kt">int</span><span class="o">&amp;</span> <span class="n">r</span><span class="p">)</span> <span class="o">:</span> <span class="n">ref</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 构造函数体内不能再次初始化ref
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">show</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;Value of ref: &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">ref</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">MyClass</span> <span class="n">obj</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>  <span class="c1">// 在对象创建时初始化引用成员
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">obj</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>  <span class="c1">// 输出: Value of ref: 10
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>引用成员的生命周期：引用成员的生命周期与包含它的对象的生命周期一致。引用成员会一直引用初始化时绑定的对象或变量，直到包含它的对象被销毁。</p>
+</li>
+<li>
+<p>初始化顺序：在C++中，成员变量的初始化顺序是根据它们在类中声明的顺序，而不是在初始化列表中的顺序。因此，即使在初始化列表中按不同顺序列出成员变量，实际的初始化顺序仍然是根据它们在类中的声明顺序来执行的。</p>
+</li>
+</ol>
+</li>
+</ol>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/">备忘笔记</a>
+        
+            <a href="/tags/c&#43;&#43;/">C&#43;&#43;</a>
+        
+    </section>
+
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/c-%E6%8A%80%E6%9C%AFqa%E4%B8%80/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">C&#43;&#43;技术Q&amp;A（一）</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/c-11/14%E6%A0%87%E5%87%86/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">C&#43;&#43; 11/14标准</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/c-lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E4%B8%8Econstexpr/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">C&#43;&#43; lambda表达式与constexpr</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

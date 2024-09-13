@@ -6,6 +6,55 @@
         <description>Recent content in Tags on 潦草小驴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <copyright>潦草小驴</copyright><atom:link href="https://zeel210.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Wed, 14 Aug 2024 21:46:21 +0800</lastBuildDate><atom:link href="https://zeel210.github.io/tags/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>C&#43;&#43;</title>
+        <link>https://zeel210.github.io/tags/c&#43;&#43;/</link>
+        <pubDate>Wed, 14 Aug 2024 21:46:21 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/tags/c&#43;&#43;/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>备忘笔记</title>
+        <link>https://zeel210.github.io/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/</link>
+        <pubDate>Wed, 14 Aug 2024 21:46:21 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Sfm</title>
+        <link>https://zeel210.github.io/tags/sfm/</link>
+        <pubDate>Thu, 11 Apr 2024 20:01:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/tags/sfm/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Slam</title>
+        <link>https://zeel210.github.io/tags/slam/</link>
+        <pubDate>Thu, 11 Apr 2024 20:01:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/tags/slam/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Ros2</title>
+        <link>https://zeel210.github.io/tags/ros2/</link>
+        <pubDate>Fri, 13 Oct 2023 22:34:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/tags/ros2/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Cmake</title>
+        <link>https://zeel210.github.io/tags/cmake/</link>
+        <pubDate>Sun, 02 Apr 2023 11:32:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/tags/cmake/</guid>
+        <description></description>
+        </item>
+        
     </channel>
 </rss>

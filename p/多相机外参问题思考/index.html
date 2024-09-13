@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="相机外参检查与校正\r思路1：利用场地中固定标记点\r将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。 每次自检时，各相机再拍摄一张照片，对比两张照片中标记点的位置，进行外参检查与校正。 标记点放置位置： a. 地面或墙壁幕布上。 b. 地面和墙壁幕布边缘交界处。 标记点类型： a. 反光贴。淘宝上有红外反光贴，但是没找到只反射红外光不反射可见光的贴。 b. led灯。如何设计：电池供电独立开关？布线供电统一开关？是否影响游戏使用体验？ 标记点个数： a. 两个：数量较小，只能做外参异常检测，做不到校正。 b. 每个相机至少看到三个非共线点：可以校正，但精度未知。会让每个场景标记点的布置变得复杂。 思路2：利用场景本身的特征点\r将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。 每次自检时，各相机再拍摄一张照片。 利用角点提取算法提取两张照片中的特征点，做匹配，根据匹配关系进行外参检查与校正。 在实际场景中的可行性和鲁棒性有待探索（公司的项目场景中红外画面纹理太少了，提取不了特征）。 网上有可供参考的特征点相机自标定资料。 现可用来测试的场地照片不多。如果有了可供测试的照片样本，可在一周内完成可行性测试。 思路3：其他基于场景本身的方法\r光流估计：光流是一种用于估计图像中像素在两个时间点之间的运动的技术。它可以用来估计相机的位移。OpenCV提供了用于计算光流的函数。只能检查不能校准。 直接法：直接法通过将两张图像的灰度值差异建模为相机运动的约束来估计相机的运动。它不依赖于特征点匹配，对于低文本纹理的场景也有效。 当相机移动位置较大，场景布置区别较大时，会失效。 缺少照片样本来做测试。 思路4：相机+IMU\r对这种模式了解不多，但网上能找到相关的成熟的方案资料。可行性验证时间未知。 不能保证在相机的偏移十分缓慢时，imu仍能发挥作用。 思路5：利用场景中人体骨骼信息\r当认为有个别相机的外参有偏移时，可以在场地中进个人，利用其骨骼信息，校正相机外参。 现已完成了一项测试：利用一个人的骨骼信息校正一台外参明显偏移的相机，效果还行，但没有达到很理想的状态。 需要测试这样的精度对 骨骼融合的影响，并继续尝试提高精度。 缺点：很难检测某一台相机外参的偏移，目前只能进行校正。需要人的参与。 可在2周内完成可行性测试。 初始外参标定过程优化\r本次在首钢的标定过程中，遇到的所有问题、麻烦，几乎都是由相机分辨率不一致，或更换相机造成的。在这两个操作后，需要手动更换991系统的中参数文件或重启设备，才能正常标定，但这些操作很难通过优化程序来解决。 对外确定世界坐标系位置的方法\r当场地中不允许粘贴胶带，来标记坐标系位置时，我们在标定后是否可以提供坐标系位置和方向在相机上的重投影坐标，来表示坐标系在场地中的实际位置？">
+<title>多相机外参问题思考</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="多相机外参问题思考">
+<meta property='og:description' content="相机外参检查与校正\r思路1：利用场地中固定标记点\r将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。 每次自检时，各相机再拍摄一张照片，对比两张照片中标记点的位置，进行外参检查与校正。 标记点放置位置： a. 地面或墙壁幕布上。 b. 地面和墙壁幕布边缘交界处。 标记点类型： a. 反光贴。淘宝上有红外反光贴，但是没找到只反射红外光不反射可见光的贴。 b. led灯。如何设计：电池供电独立开关？布线供电统一开关？是否影响游戏使用体验？ 标记点个数： a. 两个：数量较小，只能做外参异常检测，做不到校正。 b. 每个相机至少看到三个非共线点：可以校正，但精度未知。会让每个场景标记点的布置变得复杂。 思路2：利用场景本身的特征点\r将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。 每次自检时，各相机再拍摄一张照片。 利用角点提取算法提取两张照片中的特征点，做匹配，根据匹配关系进行外参检查与校正。 在实际场景中的可行性和鲁棒性有待探索（公司的项目场景中红外画面纹理太少了，提取不了特征）。 网上有可供参考的特征点相机自标定资料。 现可用来测试的场地照片不多。如果有了可供测试的照片样本，可在一周内完成可行性测试。 思路3：其他基于场景本身的方法\r光流估计：光流是一种用于估计图像中像素在两个时间点之间的运动的技术。它可以用来估计相机的位移。OpenCV提供了用于计算光流的函数。只能检查不能校准。 直接法：直接法通过将两张图像的灰度值差异建模为相机运动的约束来估计相机的运动。它不依赖于特征点匹配，对于低文本纹理的场景也有效。 当相机移动位置较大，场景布置区别较大时，会失效。 缺少照片样本来做测试。 思路4：相机+IMU\r对这种模式了解不多，但网上能找到相关的成熟的方案资料。可行性验证时间未知。 不能保证在相机的偏移十分缓慢时，imu仍能发挥作用。 思路5：利用场景中人体骨骼信息\r当认为有个别相机的外参有偏移时，可以在场地中进个人，利用其骨骼信息，校正相机外参。 现已完成了一项测试：利用一个人的骨骼信息校正一台外参明显偏移的相机，效果还行，但没有达到很理想的状态。 需要测试这样的精度对 骨骼融合的影响，并继续尝试提高精度。 缺点：很难检测某一台相机外参的偏移，目前只能进行校正。需要人的参与。 可在2周内完成可行性测试。 初始外参标定过程优化\r本次在首钢的标定过程中，遇到的所有问题、麻烦，几乎都是由相机分辨率不一致，或更换相机造成的。在这两个操作后，需要手动更换991系统的中参数文件或重启设备，才能正常标定，但这些操作很难通过优化程序来解决。 对外确定世界坐标系位置的方法\r当场地中不允许粘贴胶带，来标记坐标系位置时，我们在标定后是否可以提供坐标系位置和方向在相机上的重投影坐标，来表示坐标系在场地中的实际位置？">
+<meta property='og:url' content='https://zeel210.github.io/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2023-08-05T23:34:28&#43;08:00'/><meta property='article:modified_time' content='2023-08-05T23:34:28&#43;08:00'/>
+<meta name="twitter:title" content="多相机外参问题思考">
+<meta name="twitter:description" content="相机外参检查与校正\r思路1：利用场地中固定标记点\r将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。 每次自检时，各相机再拍摄一张照片，对比两张照片中标记点的位置，进行外参检查与校正。 标记点放置位置： a. 地面或墙壁幕布上。 b. 地面和墙壁幕布边缘交界处。 标记点类型： a. 反光贴。淘宝上有红外反光贴，但是没找到只反射红外光不反射可见光的贴。 b. led灯。如何设计：电池供电独立开关？布线供电统一开关？是否影响游戏使用体验？ 标记点个数： a. 两个：数量较小，只能做外参异常检测，做不到校正。 b. 每个相机至少看到三个非共线点：可以校正，但精度未知。会让每个场景标记点的布置变得复杂。 思路2：利用场景本身的特征点\r将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。 每次自检时，各相机再拍摄一张照片。 利用角点提取算法提取两张照片中的特征点，做匹配，根据匹配关系进行外参检查与校正。 在实际场景中的可行性和鲁棒性有待探索（公司的项目场景中红外画面纹理太少了，提取不了特征）。 网上有可供参考的特征点相机自标定资料。 现可用来测试的场地照片不多。如果有了可供测试的照片样本，可在一周内完成可行性测试。 思路3：其他基于场景本身的方法\r光流估计：光流是一种用于估计图像中像素在两个时间点之间的运动的技术。它可以用来估计相机的位移。OpenCV提供了用于计算光流的函数。只能检查不能校准。 直接法：直接法通过将两张图像的灰度值差异建模为相机运动的约束来估计相机的运动。它不依赖于特征点匹配，对于低文本纹理的场景也有效。 当相机移动位置较大，场景布置区别较大时，会失效。 缺少照片样本来做测试。 思路4：相机+IMU\r对这种模式了解不多，但网上能找到相关的成熟的方案资料。可行性验证时间未知。 不能保证在相机的偏移十分缓慢时，imu仍能发挥作用。 思路5：利用场景中人体骨骼信息\r当认为有个别相机的外参有偏移时，可以在场地中进个人，利用其骨骼信息，校正相机外参。 现已完成了一项测试：利用一个人的骨骼信息校正一台外参明显偏移的相机，效果还行，但没有达到很理想的状态。 需要测试这样的精度对 骨骼融合的影响，并继续尝试提高精度。 缺点：很难检测某一台相机外参的偏移，目前只能进行校正。需要人的参与。 可在2周内完成可行性测试。 初始外参标定过程优化\r本次在首钢的标定过程中，遇到的所有问题、麻烦，几乎都是由相机分辨率不一致，或更换相机造成的。在这两个操作后，需要手动更换991系统的中参数文件或重启设备，才能正常标定，但这些操作很难通过优化程序来解决。 对外确定世界坐标系位置的方法\r当场地中不允许粘贴胶带，来标记坐标系位置时，我们在标定后是否可以提供坐标系位置和方向在相机上的重投影坐标，来表示坐标系在场地中的实际位置？">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#相机外参检查与校正">相机外参检查与校正</a>
+      <ol>
+        <li><a href="#思路1利用场地中固定标记点">思路1：利用场地中固定标记点</a></li>
+        <li><a href="#思路2利用场景本身的特征点">思路2：利用场景本身的特征点</a></li>
+        <li><a href="#思路3其他基于场景本身的方法">思路3：其他基于场景本身的方法</a></li>
+        <li><a href="#思路4相机imu">思路4：相机+IMU</a></li>
+        <li><a href="#思路5利用场景中人体骨骼信息">思路5：利用场景中人体骨骼信息</a></li>
+      </ol>
+    </li>
+    <li><a href="#初始外参标定过程优化">初始外参标定过程优化</a></li>
+    <li><a href="#对外确定世界坐标系位置的方法">对外确定世界坐标系位置的方法</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/" >
+                相机标定
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E9%97%AE%E9%A2%98%E6%80%9D%E8%80%83/">多相机外参问题思考</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Aug 05, 2023</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="相机外参检查与校正">相机外参检查与校正
+</h2><h3 id="思路1利用场地中固定标记点">思路1：利用场地中固定标记点
+</h3><p>将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。</p>
+<p>每次自检时，各相机再拍摄一张照片，对比两张照片中标记点的位置，进行外参检查与校正。</p>
+<p>标记点放置位置：</p>
+<p>a. 地面或墙壁幕布上。</p>
+<p>b. 地面和墙壁幕布边缘交界处。</p>
+<p>标记点类型：</p>
+<p>a. 反光贴。淘宝上有红外反光贴，但是没找到只反射红外光不反射可见光的贴。</p>
+<p><img src="/images/ksohtml/wps8QYVxn.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>b. led灯。如何设计：电池供电独立开关？布线供电统一开关？是否影响游戏使用体验？</p>
+<p>标记点个数：</p>
+<p>a. 两个：数量较小，只能做外参异常检测，做不到校正。</p>
+<p>b. 每个相机至少看到三个非共线点：可以校正，但精度未知。会让每个场景标记点的布置变得复杂。</p>
+<h3 id="思路2利用场景本身的特征点">思路2：利用场景本身的特征点
+</h3><p>将标记点固定在场地中，用标定杆完成初始外参标定后，所有相机拍摄一张场地照片。</p>
+<p>每次自检时，各相机再拍摄一张照片。</p>
+<p>利用角点提取算法提取两张照片中的特征点，做匹配，根据匹配关系进行外参检查与校正。</p>
+<p><img src="/images/ksohtml/wpsChBAtl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p><img src="/images/ksohtml/wpsHfS0Ll.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>在实际场景中的可行性和鲁棒性有待探索（公司的项目场景中红外画面纹理太少了，提取不了特征）。</p>
+<p>网上有可供参考的特征点相机自标定资料。</p>
+<p><img src="/images/ksohtml/wpsdOxVTl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p>现可用来测试的场地照片不多。如果有了可供测试的照片样本，可在一周内完成可行性测试。</p>
+<h3 id="思路3其他基于场景本身的方法">思路3：其他基于场景本身的方法
+</h3><ol>
+<li><strong>光流估计</strong>：光流是一种用于估计图像中像素在两个时间点之间的运动的技术。它可以用来估计相机的位移。OpenCV提供了用于计算光流的函数。只能检查不能校准。</li>
+<li><strong>直接法</strong>：直接法通过将两张图像的灰度值差异建模为相机运动的约束来估计相机的运动。它不依赖于特征点匹配，对于低文本纹理的场景也有效。</li>
+</ol>
+<p>当相机移动位置较大，场景布置区别较大时，会失效。</p>
+<p>缺少照片样本来做测试。</p>
+<h3 id="思路4相机imu">思路4：相机+IMU
+</h3><p>对这种模式了解不多，但网上能找到相关的成熟的方案资料。可行性验证时间未知。</p>
+<p>不能保证在相机的偏移十分缓慢时，imu仍能发挥作用。</p>
+<p><img src="/images/ksohtml/wpsuy43bm.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h3 id="思路5利用场景中人体骨骼信息">思路5：利用场景中人体骨骼信息
+</h3><p>当认为有个别相机的外参有偏移时，可以在场地中进个人，利用其骨骼信息，校正相机外参。</p>
+<p>现已完成了一项测试：利用一个人的骨骼信息校正一台外参明显偏移的相机，效果还行，但没有达到很理想的状态。</p>
+<p>需要测试这样的精度对 骨骼融合的影响，并继续尝试提高精度。</p>
+<p>缺点：很难检测某一台相机外参的偏移，目前只能进行校正。需要人的参与。</p>
+<p>可在2周内完成可行性测试。</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th><img src="/images/ksohtml/wps30yTam.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></th>
+<th><img src="/images/ksohtml/wpsBT4kFl.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p><img src="/images/ksohtml/wpsNrS7Vi.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<p><img src="/images/ksohtml/wpsIf5DOj.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+<h2 id="初始外参标定过程优化">初始外参标定过程优化
+</h2><p>本次在首钢的标定过程中，遇到的所有问题、麻烦，几乎都是由相机分辨率不一致，或更换相机造成的。在这两个操作后，需要手动更换991系统的中参数文件或重启设备，才能正常标定，但这些操作很难通过优化程序来解决。</p>
+<h2 id="对外确定世界坐标系位置的方法">对外确定世界坐标系位置的方法
+</h2><p>当场地中不允许粘贴胶带，来标记坐标系位置时，我们在标定后是否可以提供坐标系位置和方向在相机上的重投影坐标，来表示坐标系在场地中的实际位置？</p>
+<p><img src="/images/ksohtml/wpsdlVh6i.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="img"
+	
+	
+></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/%E4%B8%80%E6%AC%A1%E5%A4%9A%E7%9B%B8%E6%9C%BA%E5%A4%96%E5%8F%82%E6%A0%87%E5%AE%9A%E5%BC%82%E5%B8%B8%E7%BB%93%E6%9E%9C%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">一次多相机外参标定异常结果问题排查过程</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">相机标定原理概述</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%8F%8C%E7%9B%AE%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">双目相机标定</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/%E5%8D%95%E7%9B%AE%E7%9B%B8%E6%9C%BA%E5%86%85%E5%8F%82%E6%A0%87%E5%AE%9A/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">单目相机内参标定</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

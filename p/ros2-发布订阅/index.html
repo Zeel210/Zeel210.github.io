@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="ros2发布订阅 创建包 进入工作空间src目录 Bash ros2 pkg create &ndash;build-type ament_cmake cpp_pubsub 创建用于发布话题的cpp 使用继承模式创建节点并定时发送消息 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 #include &lt;chrono&gt; #include &lt;memory&gt; #include &#34;rclcpp/rclcpp.hpp&#34; #include &#34;std_msgs/msg/string.hpp&#34; using namespace std::chrono_literals; /* This example creates a subclass of Node and uses std::bind() to register a * member function as a callback from the timer.">
+<title>Ros2 发布订阅</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/ros2-%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="Ros2 发布订阅">
+<meta property='og:description' content="ros2发布订阅 创建包 进入工作空间src目录 Bash ros2 pkg create &ndash;build-type ament_cmake cpp_pubsub 创建用于发布话题的cpp 使用继承模式创建节点并定时发送消息 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 #include &lt;chrono&gt; #include &lt;memory&gt; #include &#34;rclcpp/rclcpp.hpp&#34; #include &#34;std_msgs/msg/string.hpp&#34; using namespace std::chrono_literals; /* This example creates a subclass of Node and uses std::bind() to register a * member function as a callback from the timer.">
+<meta property='og:url' content='https://zeel210.github.io/p/ros2-%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='备忘笔记' /><meta property='article:tag' content='ros2' /><meta property='article:published_time' content='2023-10-13T22:34:28&#43;08:00'/><meta property='article:modified_time' content='2023-10-13T22:34:28&#43;08:00'/>
+<meta name="twitter:title" content="Ros2 发布订阅">
+<meta name="twitter:description" content="ros2发布订阅 创建包 进入工作空间src目录 Bash ros2 pkg create &ndash;build-type ament_cmake cpp_pubsub 创建用于发布话题的cpp 使用继承模式创建节点并定时发送消息 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 #include &lt;chrono&gt; #include &lt;memory&gt; #include &#34;rclcpp/rclcpp.hpp&#34; #include &#34;std_msgs/msg/string.hpp&#34; using namespace std::chrono_literals; /* This example creates a subclass of Node and uses std::bind() to register a * member function as a callback from the timer.">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/ros2/" >
+                Ros2
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/ros2-%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85/">Ros2 发布订阅</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Oct 13, 2023</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <p><strong>ros2发布订阅</strong></p>
+<ol>
+<li><strong>创建包</strong></li>
+</ol>
+<p>进入工作空间src目录</p>
+<p>Bash ros2 pkg create &ndash;build-type ament_cmake cpp_pubsub</p>
+<ol start="2">
+<li><strong>创建用于发布话题的cpp</strong>
+<ol>
+<li><strong>使用继承模式创建节点并定时发送消息</strong></li>
+</ol>
+</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;chrono&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;rclcpp/rclcpp.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;std_msgs/msg/string.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono_literals</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/* This example creates a subclass of Node and uses std::bind() to register a
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * member function as a callback from the timer. */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">MinimalPublisher</span> <span class="o">:</span> <span class="k">public</span> <span class="n">rclcpp</span><span class="o">::</span><span class="n">Node</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="n">MinimalPublisher</span><span class="p">()</span> <span class="o">:</span> <span class="n">Node</span><span class="p">(</span><span class="s">&#34;minimal_publisher&#34;</span><span class="p">),</span> <span class="n">count_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">publisher_</span> <span class="o">=</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">create_publisher</span><span class="o">&lt;</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&#34;topic&#34;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">timer_</span> <span class="o">=</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">create_wall_timer</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="mi">500</span><span class="n">ms</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">MinimalPublisher</span><span class="o">::</span><span class="n">timer_callback</span><span class="p">,</span> <span class="k">this</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="n">timer_callback</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">message</span> <span class="o">=</span> <span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">message</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="s">&#34;Hello, world! &#34;</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">count_</span><span class="o">++</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RCLCPP_INFO</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">get_logger</span><span class="p">(),</span> <span class="s">&#34;Publishing: &#39;%s&#39;&#34;</span><span class="p">,</span> <span class="n">message</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="n">publisher_</span><span class="o">-&gt;</span><span class="n">publish</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">TimerBase</span><span class="o">::</span><span class="n">SharedPtr</span> <span class="n">timer_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">Publisher</span><span class="o">&lt;</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;::</span><span class="n">SharedPtr</span> <span class="n">publisher_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">size_t</span> <span class="n">count_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">spin</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">MinimalPublisher</span><span class="o">&gt;</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">shutdown</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在上面代码中，创建继承自rclcpp::Node的MinimalPublisher类，在此类的构造函数中分别创建发布者和定时器，使用定时器每500ms定时执行一次timer_callback函数，在此函数中执行一次消息的发布，RCLCPP_INFO宏负责完成将log信息写入控制台，此消息可在rqt_console中看到</p>
+<p><code>rclcpp::spin(node)</code>会让程序进入一个循环，处理所有待处理的回调，直到ROS被关闭或者节点被销毁。在这个循环中，程序会一直检查是否有新的回调需要处理，并处理它们。如果没有待处理的回调，程序会阻塞，直到有新的回调需要处理。</p>
+<p>​	2. <strong>直接在main函数中发送消息</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;rclcpp/rclcpp.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;std_msgs/msg/string.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">node</span> <span class="o">=</span> <span class="n">rclcpp</span><span class="o">::</span><span class="n">Node</span><span class="o">::</span><span class="n">make_shared</span><span class="p">(</span><span class="s">&#34;publisher&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">publisher</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">      <span class="n">node</span><span class="o">-&gt;</span><span class="n">create_publisher</span><span class="o">&lt;</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&#34;my_publish&#34;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">WallRate</span> <span class="n">rate</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span> <span class="c1">// 1Hz
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">while</span> <span class="p">(</span><span class="n">rclcpp</span><span class="o">::</span><span class="n">ok</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">message</span> <span class="o">=</span> <span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">message</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="s">&#34;Hello World &#34;</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">count</span><span class="o">++</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RCLCPP_INFO</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">get_logger</span><span class="p">(),</span> <span class="s">&#34;Publishing: &#39;%s&#39;&#34;</span><span class="p">,</span> <span class="n">message</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="n">publisher</span><span class="o">-&gt;</span><span class="n">publish</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">rclcpp</span><span class="o">::</span><span class="n">spin_some</span><span class="p">(</span><span class="n">node</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rate</span><span class="p">.</span><span class="n">sleep</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">shutdown</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>此方法采取了一种更为传统的方式，首先创建节点publisher，然后创建话题my_publish，后使用循环发送消息。</p>
+<p>rclcpp::spin_some(node)它的作用是处理节点中待处理的一部分回调，如果不添加此语句，此节点将无法处理订阅者的回调，也就是订阅者无法工作，此方法将不会阻塞</p>
+<ol start="3">
+<li><strong>将相关依赖加入camke</strong></li>
+</ol>
+<p>以将2.1中代码为例写入src/cpp_pubsub/src/publisher_member_function.cpp中，然后将此文件及其依赖加入/home/xiejiapeng/dev_ws/src/cpp_pubsub/CMakeLists.txt中</p>
+<p>添加ros2相关依赖：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">find_package</span><span class="p">(</span><span class="s">rclcpp</span> <span class="s">REQUIRED</span><span class="p">)</span> <span class="nb">find_package</span><span class="p">(</span><span class="s">std_msgs</span> <span class="s">REQUIRED</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>添加可执行文件：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">add_executable</span><span class="p">(</span><span class="s">publisher</span> <span class="s">src/publisher_member_function.cpp</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>指定目标（一个库或可执行文件）依赖项：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">ament_target_dependencies</span><span class="p">(</span><span class="s">publisher</span> <span class="s">rclcpp</span> <span class="s">std_msgs</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>完整CMakeLists.txt</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.5</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">project</span><span class="p">(</span><span class="s">cpp_pubsub</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Default to C++14
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">if</span><span class="p">(</span><span class="s">NOT</span> <span class="s">CMAKE_CXX_STANDARD</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>  <span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">14</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">endif</span><span class="p">()</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">if</span><span class="p">(</span><span class="s">CMAKE_COMPILER_IS_GNUCXX</span> <span class="s">OR</span> <span class="s">CMAKE_CXX_COMPILER_ID</span> <span class="s">MATCHES</span> <span class="s2">&#34;Clang&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>  <span class="nb">add_compile_options</span><span class="p">(</span><span class="s">-Wall</span> <span class="s">-Wextra</span> <span class="s">-Wpedantic</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">endif</span><span class="p">()</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">find_package</span><span class="p">(</span><span class="s">ament_cmake</span> <span class="s">REQUIRED</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">find_package</span><span class="p">(</span><span class="s">rclcpp</span> <span class="s">REQUIRED</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">find_package</span><span class="p">(</span><span class="s">std_msgs</span> <span class="s">REQUIRED</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_executable</span><span class="p">(</span><span class="s">talker</span> <span class="s">src/publisher_member_function.cpp</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">ament_target_dependencies</span><span class="p">(</span><span class="s">talker</span> <span class="s">rclcpp</span> <span class="s">std_msgs</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">install</span><span class="p">(</span><span class="s">TARGETS</span>
+</span></span><span class="line"><span class="cl">  <span class="s">talker</span>
+</span></span><span class="line"><span class="cl">  <span class="s">DESTINATION</span> <span class="s">lib/</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">ament_package</span><span class="p">()</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="4">
+<li><strong>创建用于订阅话题的cpp</strong>
+<ol>
+<li>使用继承模式创建节点**</li>
+</ol>
+</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;rclcpp/rclcpp.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;std_msgs/msg/string.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="k">using</span> <span class="n">std</span><span class="o">::</span><span class="n">placeholders</span><span class="o">::</span><span class="n">_1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">MinimalSubscriber</span> <span class="o">:</span> <span class="k">public</span> <span class="n">rclcpp</span><span class="o">::</span><span class="n">Node</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="n">MinimalSubscriber</span><span class="p">()</span> <span class="o">:</span> <span class="n">Node</span><span class="p">(</span><span class="s">&#34;minimal_subscriber&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">subscription_</span> <span class="o">=</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">create_subscription</span><span class="o">&lt;</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;topic&#34;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">MinimalSubscriber</span><span class="o">::</span><span class="n">topic_callback</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="n">_1</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="n">topic_callback</span><span class="p">(</span><span class="k">const</span> <span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">::</span><span class="n">SharedPtr</span> <span class="n">msg</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RCLCPP_INFO</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">get_logger</span><span class="p">(),</span> <span class="s">&#34;I heard: &#39;%s&#39;&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">Subscription</span><span class="o">&lt;</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;::</span><span class="n">SharedPtr</span> <span class="n">subscription_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">spin</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">MinimalSubscriber</span><span class="o">&gt;</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rclcpp</span><span class="o">::</span><span class="n">shutdown</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>​	2. <strong>直接在main函数中订阅</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;rclcpp/rclcpp.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;std_msgs/msg/string.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">message_callback</span><span class="p">(</span><span class="k">const</span> <span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">::</span><span class="n">SharedPtr</span> <span class="n">msg</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RCLCPP_INFO</span><span class="p">(</span><span class="n">rclcpp</span><span class="o">::</span><span class="n">get_logger</span><span class="p">(</span><span class="s">&#34;rclcpp&#34;</span><span class="p">),</span> <span class="s">&#34;I heard: &#39;%s&#39;&#34;</span><span class="p">,</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rclcpp</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">node</span> <span class="o">=</span> <span class="n">rclcpp</span><span class="o">::</span><span class="n">Node</span><span class="o">::</span><span class="n">make_shared</span><span class="p">(</span><span class="s">&#34;my_subscriber&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">subscriber</span> <span class="o">=</span> <span class="n">node</span><span class="o">-&gt;</span><span class="n">create_subscription</span><span class="o">&lt;</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&#34;my_publish&#34;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">message_callback</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">RCLCPP_INFO</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">get_logger</span><span class="p">(),</span> <span class="s">&#34;Waiting for messages...&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rclcpp</span><span class="o">::</span><span class="n">spin</span><span class="p">(</span><span class="n">node</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">rclcpp</span><span class="o">::</span><span class="n">shutdown</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/">备忘笔记</a>
+        
+            <a href="/tags/ros2/">Ros2</a>
+        
+    </section>
+
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/%E5%B8%B8%E7%94%A8%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7%E4%B8%8E%E5%91%BD%E4%BB%A4/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">常用调试工具与命令</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

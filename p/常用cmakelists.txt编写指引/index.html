@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="Basic project\r最基本的CMake工程就是将一个源文件编译为一个可执行程序，需要包含以下三个内容 1 2 3 cmake_minimum_required(VERSION 3.10) #指定最小可用的CMake版本 ，从而使得CMake版本兼容 project(MyTest) #指定项目名称 add_executable(MyTest main.cpp) #使用指定的源文件编译可执行程序 指定c++标准\rMethod 注意CXX标准指定应在add_executable()调用之前，保证指定有效 1 2 set(CMAKE_CXX_STANDARD xx) set(CMAKE_CXX_STANDARD_REQUIRED True) Example 1 2 set(CMAKE_CXX_STANDARD 11) set(CMAKE_CXX_STANDARD_REQUIRED True) 添加库文件\r创建library \u200b\tMethod 使用add_library()命令指定构建库所需的源文件 当使用一个或多个子目录组织项目时，专门为库文件创建一个子目录，子目录中创建新的CMakeLists.txt文件用于库的编译，顶层CMakeLists.txt文件中使用add_subdirectory()将子目录添加至工程中，用于后续的构建 使用target_include_directory()， target_link_library()将构建的库文件连接到可执行目标 \u200b\tExample 基于下面的目录结构，在子目录src/将subject.cpp文件编译成动态链接库，并在顶级目录下进行链接 ├── CMakeLists.txt ├── README ├── src │ ├── CMakeLists.txt │ ├── common.h │ ├── subject.cpp │ └── subject.h └── test \u200b └── demo.cpp src/CMakeLists.txt: 1 2 3 4 5 6 7 cmake_minimum_required(VERSION 3.">
+<title>常用CMakeLists.txt编写指引</title>
+
+<link rel='canonical' href='https://zeel210.github.io/p/%E5%B8%B8%E7%94%A8cmakelists.txt%E7%BC%96%E5%86%99%E6%8C%87%E5%BC%95/'>
+
+<link rel="stylesheet" href="/scss/style.min.e8c7fca7d1c9294aa7a4f3426c225ee26540f7d94e39be0b5a4a5c8a49ca5a25.css"><meta property='og:title' content="常用CMakeLists.txt编写指引">
+<meta property='og:description' content="Basic project\r最基本的CMake工程就是将一个源文件编译为一个可执行程序，需要包含以下三个内容 1 2 3 cmake_minimum_required(VERSION 3.10) #指定最小可用的CMake版本 ，从而使得CMake版本兼容 project(MyTest) #指定项目名称 add_executable(MyTest main.cpp) #使用指定的源文件编译可执行程序 指定c++标准\rMethod 注意CXX标准指定应在add_executable()调用之前，保证指定有效 1 2 set(CMAKE_CXX_STANDARD xx) set(CMAKE_CXX_STANDARD_REQUIRED True) Example 1 2 set(CMAKE_CXX_STANDARD 11) set(CMAKE_CXX_STANDARD_REQUIRED True) 添加库文件\r创建library \u200b\tMethod 使用add_library()命令指定构建库所需的源文件 当使用一个或多个子目录组织项目时，专门为库文件创建一个子目录，子目录中创建新的CMakeLists.txt文件用于库的编译，顶层CMakeLists.txt文件中使用add_subdirectory()将子目录添加至工程中，用于后续的构建 使用target_include_directory()， target_link_library()将构建的库文件连接到可执行目标 \u200b\tExample 基于下面的目录结构，在子目录src/将subject.cpp文件编译成动态链接库，并在顶级目录下进行链接 ├── CMakeLists.txt ├── README ├── src │ ├── CMakeLists.txt │ ├── common.h │ ├── subject.cpp │ └── subject.h └── test \u200b └── demo.cpp src/CMakeLists.txt: 1 2 3 4 5 6 7 cmake_minimum_required(VERSION 3.">
+<meta property='og:url' content='https://zeel210.github.io/p/%E5%B8%B8%E7%94%A8cmakelists.txt%E7%BC%96%E5%86%99%E6%8C%87%E5%BC%95/'>
+<meta property='og:site_name' content='潦草小驴'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='cmake' /><meta property='article:tag' content='备忘笔记' /><meta property='article:published_time' content='2023-04-02T11:32:28&#43;08:00'/><meta property='article:modified_time' content='2023-04-02T11:32:28&#43;08:00'/>
+<meta name="twitter:title" content="常用CMakeLists.txt编写指引">
+<meta name="twitter:description" content="Basic project\r最基本的CMake工程就是将一个源文件编译为一个可执行程序，需要包含以下三个内容 1 2 3 cmake_minimum_required(VERSION 3.10) #指定最小可用的CMake版本 ，从而使得CMake版本兼容 project(MyTest) #指定项目名称 add_executable(MyTest main.cpp) #使用指定的源文件编译可执行程序 指定c++标准\rMethod 注意CXX标准指定应在add_executable()调用之前，保证指定有效 1 2 set(CMAKE_CXX_STANDARD xx) set(CMAKE_CXX_STANDARD_REQUIRED True) Example 1 2 set(CMAKE_CXX_STANDARD 11) set(CMAKE_CXX_STANDARD_REQUIRED True) 添加库文件\r创建library \u200b\tMethod 使用add_library()命令指定构建库所需的源文件 当使用一个或多个子目录组织项目时，专门为库文件创建一个子目录，子目录中创建新的CMakeLists.txt文件用于库的编译，顶层CMakeLists.txt文件中使用add_subdirectory()将子目录添加至工程中，用于后续的构建 使用target_include_directory()， target_link_library()将构建的库文件连接到可执行目标 \u200b\tExample 基于下面的目录结构，在子目录src/将subject.cpp文件编译成动态链接库，并在顶级目录下进行链接 ├── CMakeLists.txt ├── README ├── src │ ├── CMakeLists.txt │ ├── common.h │ ├── subject.cpp │ └── subject.h └── test \u200b └── demo.cpp src/CMakeLists.txt: 1 2 3 4 5 6 7 cmake_minimum_required(VERSION 3.">
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+  
+
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/duck_hu5ed34eb98b5736faf7cc7abbd944a9ac_1595971_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🤪</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">潦草小驴</a></h1>
+            <h2 class="site-description">会逐渐丰富网站功能的~</h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://zeel210.github.io/en/" >English</option>
+                                
+                                    <option value="https://zeel210.github.io/" selected>中文</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#basic-project">Basic project</a></li>
+    <li><a href="#指定c标准">指定c++标准</a></li>
+    <li><a href="#添加库文件">添加库文件</a></li>
+    <li><a href="#使用条件语句">使用条件语句</a></li>
+    <li><a href="#使用接口库指定c标准interface-library">使用接口库指定c++标准(INTERFACE Library)</a></li>
+    <li><a href="#生成表达式">生成表达式</a></li>
+    <li><a href="#安装">安装</a></li>
+    <li><a href="#include用法">include()用法</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/cmake/" >
+                Cmake
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/%E5%B8%B8%E7%94%A8cmakelists.txt%E7%BC%96%E5%86%99%E6%8C%87%E5%BC%95/">常用CMakeLists.txt编写指引</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Apr 02, 2023</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="basic-project">Basic project
+</h2><p>最基本的CMake工程就是将一个源文件编译为一个可执行程序，需要包含以下三个内容</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.10</span><span class="p">)</span> <span class="c">#指定最小可用的CMake版本 ，从而使得CMake版本兼容
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">project</span><span class="p">(</span><span class="s">MyTest</span><span class="p">)</span> <span class="c">#指定项目名称
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_executable</span><span class="p">(</span><span class="s">MyTest</span> <span class="s">main.cpp</span><span class="p">)</span> <span class="c">#使用指定的源文件编译可执行程序
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="指定c标准">指定c++标准
+</h2><p><strong>Method</strong></p>
+<p>注意CXX标准指定应在add_executable()调用之前，保证指定有效</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">xx</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD_REQUIRED</span> <span class="s">True</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>Example</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">11</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD_REQUIRED</span> <span class="s">True</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="添加库文件">添加库文件
+</h2><ol>
+<li><strong>创建library</strong></li>
+</ol>
+<p>​	<strong>Method</strong></p>
+<p>使用<code>add_library()</code>命令指定构建库所需的源文件</p>
+<p>当使用一个或多个子目录组织项目时，专门为库文件创建一个子目录，子目录中创建新的CMakeLists.txt文件用于库的编译，顶层CMakeLists.txt文件中使用<code>add_subdirectory()</code>将子目录添加至工程中，用于后续的构建</p>
+<p>使用<code>target_include_directory()</code>， <code>target_link_library()</code>将构建的库文件连接到可执行目标</p>
+<p>​	<strong>Example</strong></p>
+<p>基于下面的目录结构，在子目录src/将subject.cpp文件编译成动态链接库，并在顶级目录下进行链接</p>
+<blockquote>
+<p>├── CMakeLists.txt</p>
+<p>├── README</p>
+<p>├── src</p>
+<p>│  ├── CMakeLists.txt</p>
+<p>│  ├── common.h</p>
+<p>│  ├── subject.cpp</p>
+<p>│  └── subject.h</p>
+<p>└── test</p>
+<p>​    └── demo.cpp</p>
+</blockquote>
+<p>src/CMakeLists.txt:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.15</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">project</span><span class="p">(</span><span class="s">SubjectTest</span><span class="p">)</span>  <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">14</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD_REQUIRED</span> <span class="s">True</span><span class="p">)</span>  <span class="c"># 配置编译选项 
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_compile_options</span><span class="p">(</span><span class="s">-Wall</span> <span class="s">-Wextra</span> <span class="s">-Werror</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span> <span class="s2">&#34;${CMAKE_CXX_FLAGS} -pthread -std=c++14&#34;</span><span class="p">)</span>  <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_library</span><span class="p">(</span><span class="s">SubjectTest</span> <span class="s">SHARED</span> <span class="s">subject.cpp</span><span class="p">)</span> <span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意，<code>target_include_directory()</code>， <code>target_link_library()</code>使用应在<code>add_executable()</code>之后。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.15</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">project</span><span class="p">(</span><span class="s">MyProject</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">14</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 配置编译选项
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_compile_options</span><span class="p">(</span><span class="s">-Wall</span> <span class="s">-Wextra</span> <span class="s">-Werror</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span> <span class="s2">&#34;${CMAKE_CXX_FLAGS} -pthread -std=c++14&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_subdirectory</span><span class="p">(</span><span class="s">src</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">message</span><span class="p">(</span><span class="s">STATUS</span> <span class="s2">&#34;include path:   ${CMAKE_CURRENT_SOURCE_DIR}&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include_directories</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/src</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 设置要编译的可执行文件
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">set</span><span class="p">(</span><span class="s">TEST_SOURCES</span>
+</span></span><span class="line"><span class="cl">    <span class="s">test/demo.cpp</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Build the executable
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_executable</span><span class="p">(</span><span class="s">test</span> <span class="o">${</span><span class="nv">TEST_SOURCES</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">target_include_directories</span><span class="p">(</span><span class="s">test</span> <span class="s">PUBLIC</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;${PROJECT_BINARY_DIR}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;${PROJECT_SOURCE_DIR}/src&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">test</span> <span class="s">PUBLIC</span> <span class="s">SubjectTest</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="使用条件语句">使用条件语句
+</h2><p><code>option()</code>允许用户自定义指定CMake构建过程，并为用户提供一个变量可在CMake构建时按值实现自定义构建.</p>
+<h2 id="使用接口库指定c标准interface-library">使用接口库指定c++标准(INTERFACE Library)
+</h2><p><strong>Method</strong></p>
+<p>在前文中构建basic project中提到CMake构建时需要指定cxx标准，除了上面的方法，还可以用接口库进行指定，接口库是一种特殊类型的库，他只包含头文件，并不包含实际源代码与链接库，用于定义接口与依赖关系，并在不同目标之间共享接口。</p>
+<p>接口库需要用关键字<code>INTERFACE</code>指明，需要创建、定义、链接等步骤.</p>
+<p><strong>Example</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">add_library</span><span class="p">(</span><span class="s">tutorial_compiler_flags</span> <span class="s">INTERFACE</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 用于指定编译目标的编译特性，它允许用户在构建过程中声明目标所需的语言特性或编译器功能，以确保正确的编译环境
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">target_compile_features</span><span class="p">(</span><span class="s">tutorial_compiler_flags</span> <span class="s">INTERFACE</span> <span class="s">cxx_std_11</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 同样需要将该interface library连接到要构建的可执行程序中
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">Tutorial</span> <span class="s">PUBLIC</span> <span class="s">MathFunctions</span> <span class="s">tutorial_compiler_flags</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">-------</span> <span class="err">可实现替代下面的语句</span> <span class="err">---------</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># # specify the C++ standard
+</span></span></span><span class="line"><span class="cl"><span class="c"># set(CMAKE_CXX_STANDARD 11)
+</span></span></span><span class="line"><span class="cl"><span class="c"># set(CMAKE_CXX_STANDARD_REQUIRED True)
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="生成表达式">生成表达式
+</h2><p>该表达式用于在构建过程中动态生成值，提供一种脚本中进行条件判断、迭代、选择的灵活用法.</p>
+<ul>
+<li>
+<p>常见用法：有条件的添加编译器标志，例如用于语言级别或警告的标志</p>
+</li>
+<li>
+<p><code>$&lt;TARGET_PROPERTY:target,prop&gt;</code>获取目标属性的值，检查其是否匹配，如果编译器的语言和标识符与提供的参数匹配；否则返回零（false)</p>
+</li>
+<li>
+<p><code>$&lt;CONDITION:VALUE_IF_TRUE;VALUE_IF_FALSE&gt;</code>，其中<code>CONDITION</code>是一个条件，<code>VALUE_IF_TRUE</code>和<code>VALUE_IF_FALSE</code>是根据条件结果选择的值。</p>
+</li>
+</ul>
+<p><strong>Method</strong></p>
+<p>使用生成表达式添加不同的编译警告。</p>
+<ul>
+<li>使用了<code>$&lt;COMPILE_LANG_AND_ID: lang, id&gt;</code>生成器表达式来判断当前编译器是否属于GCC风格的C++编译器，根据表达式返回值给变量<code>gcc_like_cxx</code>赋值。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">set</span><span class="p">(</span><span class="s">gcc_like_cxx</span> <span class="s2">&#34;$&lt;COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC&gt;&#34;</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">msvc_cxx</span> <span class="s2">&#34;$&lt;COMPILE_LANG_AND_ID:CXX,MSVC&gt;&#34;</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">target_compile_options</span><span class="p">(</span><span class="s">tutorial_compiler_flags</span> <span class="s">INTERFACE</span>  
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;$&lt;${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused&gt;&#34;</span>  
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;$&lt;${msvc_cxx}:-W3&gt;&#34;</span> 
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="安装">安装
+</h2><ul>
+<li>将编译的内容安装至本地指定目录
+<ul>
+<li>安装可执行文件，将可执行文件安装至bin/ 目录</li>
+<li>安装动态链接库、静态链接库，将库文件安装至 lib/ 目录</li>
+<li>安装头文件 ，安装至include/ 目录</li>
+</ul>
+</li>
+</ul>
+<p><strong>Method</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">install</span><span class="p">(</span><span class="s">TARGETS</span> <span class="s">&lt;your_targets_name&gt;</span> <span class="s">DESTINATION</span> <span class="s">&lt;your_target_dir&gt;）</span> 
+</span></span><span class="line"><span class="cl"><span class="c">#具体编译时，如果写的是相对路径，需要指定prefix，否则将会安装的系统路径下，可通过sh脚本指定 
+</span></span></span><span class="line"><span class="cl"><span class="c">#example: cmake --install . --prefix &#34;./release&#34;
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>Example</strong></p>
+<p>该示例是对上面创建库CMakeLists.txt文件的补充，可将生成的可执行程序、库文件、头文件安装至指定目录.</p>
+<p>顶级目录下的CMakeLists.txt：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.15</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">project</span><span class="p">(</span><span class="s">MyProject</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">14</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 配置编译选项
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_compile_options</span><span class="p">(</span><span class="s">-Wall</span> <span class="s">-Wextra</span> <span class="s">-Werror</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span> <span class="s2">&#34;${CMAKE_CXX_FLAGS} -pthread -std=c++14&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_subdirectory</span><span class="p">(</span><span class="s">src</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">message</span><span class="p">(</span><span class="s">STATUS</span> <span class="s2">&#34;include path:   ${CMAKE_CURRENT_SOURCE_DIR}&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include_directories</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/src</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># install include file
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">install</span><span class="p">(</span><span class="s">DIRECTORY</span> <span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/src</span> <span class="s">DESTINATION</span> <span class="s">include</span> <span class="s">FILES_MATCHING</span> <span class="s">PATTERN</span> <span class="s2">&#34;*.h&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># # Add your test source files
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">set</span><span class="p">(</span><span class="s">TEST_SOURCES</span>
+</span></span><span class="line"><span class="cl">    <span class="s">test/demo.cpp</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Build the executable
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_executable</span><span class="p">(</span><span class="s">test</span> <span class="o">${</span><span class="nv">TEST_SOURCES</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">target_include_directories</span><span class="p">(</span><span class="s">test</span> <span class="s">PUBLIC</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;${PROJECT_BINARY_DIR}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;${PROJECT_SOURCE_DIR}/src&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">test</span> <span class="s">PUBLIC</span> <span class="s">SubjectTest</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">install</span><span class="p">(</span><span class="s">TARGETS</span> <span class="s">test</span> <span class="s">DESTINATION</span> <span class="s">bin</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>子目录：src/CMakeLists.txt：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.15</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">project</span><span class="p">(</span><span class="s">SubjectTest</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span> <span class="s">14</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD_REQUIRED</span> <span class="s">True</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 配置编译选项
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_compile_options</span><span class="p">(</span><span class="s">-Wall</span> <span class="s">-Wextra</span> <span class="s">-Werror</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span> <span class="s2">&#34;${CMAKE_CXX_FLAGS} -pthread -std=c++14&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_library</span><span class="p">(</span><span class="s">SubjectTest</span> <span class="s">SHARED</span> <span class="s">subject.cpp</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">install</span><span class="p">(</span><span class="s">TARGETS</span> <span class="s">SubjectTest</span> <span class="s">LIBRARY</span> <span class="s">DESTINATION</span> <span class="s">lib</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>使用命令<code>cmake --install . --prefix &quot;./release&quot;</code>编译后，再当前目录的release文件夹下存在如下文件结构，安装成功。</p>
+<blockquote>
+<p>├── release</p>
+<p>│  ├── bin</p>
+<p>│  │     └── test</p>
+<p>│  ├── include</p>
+<p>│  │     └── src</p>
+<p>│  │     	├── common.h</p>
+<p>│  │    	└── subject.h</p>
+<p>│  └── lib</p>
+<p>│    	└── libSubjectTest.so</p>
+</blockquote>
+<h2 id="include用法">include()用法
+</h2><p><strong>Method</strong></p>
+<p>￮ module是包含CMake模块的名称，该module是包含CMake脚本的文件，用于提供额外的功能，会根据预定的模块路径搜索指定的module文件并加载内容</p>
+<ul>
+<li>优点
+<ul>
+<li>提供额外功能，轻松扩展CMake的能力，从而更好地满足项目的要求</li>
+<li>代码复用和模块化，保持代码的一致性与可维护性</li>
+<li>提高配置和构建的可读性，将配置和构建过程分解为更小的模块，使得CMakeLists.txt文件更易于理解和维护</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">include</span><span class="p">(</span><span class="s">&lt;module&gt;</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>Example</strong></p>
+<ul>
+<li>文件结构
+<ul>
+<li>在&quot;${CMAKE_CURRENT_SOURCE_DIR}/cmake&quot;文件夹下有如下几个模块</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>├── cmake</p>
+<p>│  ├── 3rdpart.cmake</p>
+<p>│  ├── build_option.cmake</p>
+<p>│  ├── nt98566</p>
+<p>│  │     └── ast.cmake</p>
+<p>│  └── x86_64</p>
+<p>│         └── ast.cmake</p>
+<p>├── CMakeLists.txt</p>
+</blockquote>
+<ul>
+<li>顶层目录CMakeLists.txt
+<ul>
+<li>首先将module路径加载至CMake变量CMAKE_MODULE_PATH中</li>
+<li>使用include导入各模块</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="c">#加载自定义模块 
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_MODULE_PATH</span> <span class="o">${</span><span class="nv">CMAKE_MODULE_PATH</span><span class="o">}</span> <span class="s2">&#34;${CMAKE_CURRENT_SOURCE_DIR}/cmake&#34;</span><span class="p">)</span>  <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include</span><span class="p">(</span><span class="s">build_option</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include</span><span class="p">(</span><span class="s">3rdpart</span><span class="p">)</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include</span><span class="p">(</span><span class="o">${</span><span class="nv">PLATFORM</span><span class="o">}</span><span class="s">/ast</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/cmake/">Cmake</a>
+        
+            <a href="/tags/%E5%A4%87%E5%BF%98%E7%AC%94%E8%AE%B0/">备忘笔记</a>
+        
+    </section>
+
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 潦草小驴
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

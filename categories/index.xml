@@ -6,13 +6,46 @@
         <description>Recent content in Categories on 潦草小驴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <copyright>潦草小驴</copyright><atom:link href="https://zeel210.github.io/categories/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>Test</title>
-        <link>https://zeel210.github.io/categories/test/</link>
-        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Wed, 14 Aug 2024 21:46:21 +0800</lastBuildDate><atom:link href="https://zeel210.github.io/categories/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>C&#43;&#43;</title>
+        <link>https://zeel210.github.io/categories/c&#43;&#43;/</link>
+        <pubDate>Wed, 14 Aug 2024 21:46:21 +0800</pubDate>
         
-        <guid>https://zeel210.github.io/categories/test/</guid>
-        <description>&lt;img src="https://zeel210.github.io/categories/test/hutomo-abrianto-l2jk-uxb1BY-unsplash.jpg" alt="Featured image of post Test" /&gt;</description>
+        <guid>https://zeel210.github.io/categories/c&#43;&#43;/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>相机标定</title>
+        <link>https://zeel210.github.io/categories/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/</link>
+        <pubDate>Sat, 15 Jun 2024 21:24:18 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/categories/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Sfm</title>
+        <link>https://zeel210.github.io/categories/sfm/</link>
+        <pubDate>Thu, 11 Apr 2024 20:01:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/categories/sfm/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Ros2</title>
+        <link>https://zeel210.github.io/categories/ros2/</link>
+        <pubDate>Fri, 13 Oct 2023 22:34:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/categories/ros2/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Cmake</title>
+        <link>https://zeel210.github.io/categories/cmake/</link>
+        <pubDate>Sun, 02 Apr 2023 11:32:28 +0800</pubDate>
+        
+        <guid>https://zeel210.github.io/categories/cmake/</guid>
+        <description></description>
         </item>
         
     </channel>

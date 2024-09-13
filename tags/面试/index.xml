@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>面试 on 潦草小驴</title>
+        <link>http://localhost:1313/tags/%E9%9D%A2%E8%AF%95/</link>
+        <description>Recent content in 面试 on 潦草小驴</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <copyright>潦草小驴</copyright>
+        <lastBuildDate>Thu, 12 Sep 2024 20:46:21 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>百度c&#43;&#43;一面</title>
+        <link>http://localhost:1313/p/%E7%99%BE%E5%BA%A6c-%E4%B8%80%E9%9D%A2/</link>
+        <pubDate>Thu, 12 Sep 2024 20:46:21 +0800</pubDate>
+        
+        <guid>http://localhost:1313/p/%E7%99%BE%E5%BA%A6c-%E4%B8%80%E9%9D%A2/</guid>
+        <description>&lt;p&gt;线程池&lt;/p&gt;
+&lt;p&gt;线程与进程的区别是什么，什么时候用一种不用另一种。&lt;/p&gt;
+&lt;p&gt;call dump？&lt;/p&gt;
+&lt;p&gt;future，条件变量&lt;/p&gt;
+&lt;p&gt;c++程序的运行过程，预处理，编译，链接，运行&lt;/p&gt;
+&lt;p&gt;你的进程挂了，或者被杀掉了，怎么办，&lt;/p&gt;
+&lt;p&gt;场景题：一个文件，每行有一个数，一共200亿行，求其中只出现一次的数：bitset，两个bitset&lt;/p&gt;
+&lt;p&gt;http，tcp,udp的相关知识。&lt;/p&gt;
+&lt;p&gt;除了面试之外的电脑要静音&lt;/p&gt;
+&lt;p&gt;offer in ai 面试前充好钱&lt;/p&gt;
+&lt;p&gt;为什么要用多线程？&lt;/p&gt;
+&lt;p&gt;总之就是，计算机408里的基础知识，多看一看。&lt;/p&gt;
+&lt;p&gt;注意，对自己确认的问题，别犹豫，他问：你确定么，我就说，我确定。&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>
